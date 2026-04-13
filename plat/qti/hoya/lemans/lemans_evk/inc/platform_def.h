@@ -30,4 +30,18 @@
 #define PLAT_QTI_FIP_IOBASE		0xaf000000
 #define PLAT_QTI_FIP_MAXSIZE		0x00400000
 
+#ifdef SHARED_IMEM_BASE
+#define TFA_BL31_SHARED_IMEM_TFA_AREA_BASE      (SHARED_IMEM_BASE + 0x734 + 340)
+
+#define TFA_BL31_IMEM_ADDR(offset) \
+	(TFA_BL31_SHARED_IMEM_TFA_AREA_BASE + (offset))
+
+/*
+ * Platform slot that stores the 64-bit address of the TF-A ring buffer.
+ * On Lemans this resolves to SHARED_IMEM_BASE + 0xCF0.
+ */
+#define TFA_BL31_RING_LOG_BASE      (SHARED_IMEM_BASE + 0xCF0)
+
+#endif /* SHARED_IMEM_BASE */
+
 #endif /* PLATFORM_DEF_H */
