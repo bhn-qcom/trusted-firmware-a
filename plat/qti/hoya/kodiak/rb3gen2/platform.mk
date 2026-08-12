@@ -123,7 +123,9 @@ BL31_SOURCES	+=	plat/qti/hoya/qtiseclib/src/qtiseclib_interface_stub.c	\
 			drivers/qti/qgic/qgic_intr_svc.c				\
 			drivers/qti/qtimer/qtimer.c				\
 			plat/qti/hoya/common/src/qti_qtimer_platform.c		\
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c				\
+			drivers/qti/watchdog/v1/watchdog_ver.c			\
+			plat/qti/hoya/common/src/qti_watchdog_platform.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 $(eval $(call add_define,QTI_XPU_BYPASS))

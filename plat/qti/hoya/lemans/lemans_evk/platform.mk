@@ -130,7 +130,9 @@ BL31_SOURCES	+=	$(PLAT_PATH)/hoya/common/hoya_pm.c \
 			drivers/qti/qgic/qgic_intr_svc.c \
 			drivers/qti/qtimer/qtimer.c \
 			$(PLAT_PATH)/hoya/common/src/qti_qtimer_platform.c \
-			drivers/qti/watchdog/watchdog.c
+			drivers/qti/watchdog/watchdog.c \
+			drivers/qti/watchdog/v1/watchdog_ver.c \
+			$(PLAT_PATH)/hoya/common/src/qti_watchdog_platform.c
 else
 $(eval $(call add_define,QTISECLIB_PATH))
 # use library provided by QTISECLIB_PATH

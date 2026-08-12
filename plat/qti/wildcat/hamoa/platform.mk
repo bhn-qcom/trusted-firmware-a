@@ -202,6 +202,12 @@ BL31_SOURCES +=	drivers/qti/qtimer/qtimer.c \
 			drivers/qti/qtimer/qtimer_ncc.c \
 			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
 
+PLAT_INCLUDES += -Iinclude/drivers/qti/watchdog/${CHIPSET}
+
+BL31_SOURCES +=	drivers/qti/watchdog/watchdog.c \
+			drivers/qti/watchdog/v2/watchdog_ver.c \
+			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+
 LIB_QTI_PATH := ${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
 # Override this on the command line to point to the bl31qtilib library

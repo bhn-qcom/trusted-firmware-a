@@ -19,6 +19,7 @@
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
 #include <lib/bl_aux_params/bl_aux_params.h>
@@ -380,6 +381,9 @@ void bl31_platform_setup(void)
 		ERROR("QTimer init failed: %d\n", ret);
 	}
 
+	if (qti_watchdog_init() != 0) {
+		ERROR("Watchdog initialization error\n");
+	}
 
 	bl31qtilib_bl31_platform_setup();
 }

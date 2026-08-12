@@ -199,6 +199,23 @@ BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
 			drivers/qti/qtimer/qtimer_ncc.c \
 			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
 
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/watchdog/${CHIPSET}
+
+# Select the NORD secure watchdog implementation.
+QTI_WDOG_VARIANT	?=	windowed
+ifeq ($(QTI_WDOG_VARIANT),apsec)
+$(eval $(call add_define,WDOG_USE_APSEC))
+QTI_WDOG_VER_SRC	:=	drivers/qti/watchdog/v2/watchdog_ver.c
+else ifeq ($(QTI_WDOG_VARIANT),windowed)
+QTI_WDOG_VER_SRC	:=	drivers/qti/watchdog/v2/watchdog_ver_windowed.c
+else
+$(error QTI_WDOG_VARIANT must be windowed or apsec, got $(QTI_WDOG_VARIANT))
+endif
+
+BL31_SOURCES	+=	drivers/qti/watchdog/watchdog.c \
+			$(QTI_WDOG_VER_SRC) \
+			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
 # Override this on the command line to point to the bl31qtilib library
