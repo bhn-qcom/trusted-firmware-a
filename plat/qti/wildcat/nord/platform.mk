@@ -189,6 +189,16 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
 
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
+
+QTI_USE_QTIMER		:=	1
+QTI_USE_NCC_QTIMER	:=	1
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
+
+BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
+			drivers/qti/qtimer/qtimer_ncc.c \
+			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
+
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
 # Override this on the command line to point to the bl31qtilib library
@@ -199,6 +209,7 @@ $(warning BL31QTILIB_PATH is not provided while building, using stub \
 		implementation. THIS FIRMWARE WILL NOT BOOT!)
 BL31_SOURCES	+=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_interface_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_version_strings_stub.c
+
 else
 # use library provided by BL31QTILIB_PATH
 LDFLAGS += -L $(dir $(BL31QTILIB_PATH))

@@ -18,6 +18,7 @@
 #include <drivers/console.h>
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
+#include <drivers/qti/qtimer/qtimer.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
 #include <lib/bl_aux_params/bl_aux_params.h>
@@ -349,6 +350,7 @@ extern char OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED[];
 
 void bl31_platform_setup(void)
 {
+	int ret;
 	INFO("Starting %s - %s\n", qti_build_variant, bl31qtilib_build_variant);
 	INFO("QC Image Version %s\n", QC_IMAGE_VERSION_STRING_AUTO_UPDATED);
 	INFO("Image Variant %s\n", IMAGE_VARIANT_STRING_AUTO_UPDATED);
@@ -372,6 +374,12 @@ void bl31_platform_setup(void)
 	 * registers EL3 common interrupt handler
 	 */
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0UL);
+
+	ret = qti_qtimer_init();
+	if (ret != 0) {
+		ERROR("QTimer init failed: %d\n", ret);
+	}
+
 
 	bl31qtilib_bl31_platform_setup();
 }
