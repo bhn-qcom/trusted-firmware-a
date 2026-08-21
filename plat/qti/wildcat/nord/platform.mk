@@ -124,6 +124,7 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/qti_gic_v3.c		\
 				$(PLAT_QTI_ROOT)/common/src/qti_interrupt_svc.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_syscall.c		\
+				$(QTI_PLAT_PATH)/common/src/qti_secure_io.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_err_log.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_tlb.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
