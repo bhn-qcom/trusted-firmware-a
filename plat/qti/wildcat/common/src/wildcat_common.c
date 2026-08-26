@@ -262,6 +262,45 @@ int32_t plat_get_soc_revision(void)
 	return (int32_t)((major_rev << 8) | minor_rev);
 }
 
+/*
+ * configure_irq_type() - Program a CLR_EDGE / SET_LEVEL register pair.
+ *
+ * For each word i writes cfg_arr[i] to clr_edge_base + 4*i and
+ * ~cfg_arr[i] to set_level_base + 4*i.  A readback follows each write
+ * to ensure the INTU configuration is visible before the GIC distributor
+ * is enabled.
+ */
+void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
+			const uint32_t *cfg_arr, unsigned int num_words)
+{
+	unsigned int i;
+
+	for (i = 0U; i < num_words; i++) {
+		mmio_write_32(clr_edge_base  + 4U * i,  cfg_arr[i]);
+		mmio_read_32(clr_edge_base  + 4U * i);
+		mmio_write_32(set_level_base + 4U * i, ~cfg_arr[i]);
+		mmio_read_32(set_level_base + 4U * i);
+	}
+}
+
+/*
+ * configure_irq_array() - Write an array of 32-bit values to consecutive
+ * MMIO registers.
+ *
+ * A readback follows each write to ensure the configuration is visible
+ * before the GIC distributor is enabled.
+ */
+void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
+			 unsigned int num_words)
+{
+	unsigned int i;
+
+	for (i = 0U; i < num_words; i++) {
+		mmio_write_32(base + 4U * i, cfg_arr[i]);
+		mmio_read_32(base + 4U * i);
+	}
+}
+
 /*****************************************************************************
  * plat_is_smccc_feature_available() - This function checks whether SMCCC
  * feature is available for the platform or not.
