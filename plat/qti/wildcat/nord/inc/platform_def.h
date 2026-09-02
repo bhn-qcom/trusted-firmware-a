@@ -97,7 +97,7 @@
 /*----------------------------------------------------------------------------*/
 /* BL31 specific defines. */
 /*----------------------------------------------------------------------------*/
-#define TFA_SHARED_MEMORY_BASE	0xBC180000
+#define TFA_SHARED_MEMORY_BASE	0xBC300000
 #define TFA_SHARED_MEMORY_SIZE	0x0
 #define BL31_BASE (TFA_SHARED_MEMORY_BASE + TFA_SHARED_MEMORY_SIZE)
 #define BL31_SIZE 0x000A6000	/* 664 KB */
@@ -149,12 +149,6 @@
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
-
-/*----------------------------------------------------------------------------*/
-/* LC PON register offsets */
-/*----------------------------------------------------------------------------*/
-#define PON_PS_HOLD_RESET_CTL 0x852
-#define PON_PS_HOLD_RESET_CTL2 0x853
 
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7

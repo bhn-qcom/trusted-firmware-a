@@ -104,6 +104,8 @@ ENABLE_ASSERTIONS		:=	1
 
 # Enable backtrace dumps.
 ENABLE_BACKTRACE		:=	1
+PMIC_ARB_VERSION	:=	pmicarb7
+include drivers/qti/pmic/pmic.mk
 
 QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
@@ -130,7 +132,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_pm.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_rng.c			\
-				$(PLAT_QTI_ROOT)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c \
 				drivers/qti/crypto/rng.c
@@ -141,7 +142,7 @@ ifeq ($(CROS_WIDEVINE_SMC), 0)
 QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c
 endif
 
-PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
+PLAT_INCLUDES		+=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
 PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
@@ -192,16 +193,6 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
 BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
-PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
-
-QTI_USE_QTIMER		:=	1
-QTI_USE_NCC_QTIMER	:=	1
-$(eval $(call add_define,QTI_USE_NCC_QTIMER))
-
-BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
-			drivers/qti/qtimer/qtimer_ncc.c \
-			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
-
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
 # Select the NORD secure watchdog implementation.
@@ -218,6 +209,16 @@ endif
 BL31_SOURCES	+=	drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
 			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
+
+QTI_USE_QTIMER		:=	1
+QTI_USE_NCC_QTIMER	:=	1
+$(eval $(call add_define,QTI_USE_NCC_QTIMER))
+
+BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
+			drivers/qti/qtimer/qtimer_ncc.c \
+			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
 
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
