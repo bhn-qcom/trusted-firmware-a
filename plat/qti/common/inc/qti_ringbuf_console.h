@@ -71,11 +71,11 @@ struct circ_wo_buf {
  * @conf:    Locates the ring buffer within the region (offset, size)
  * @wo_cbuf: Circular log buffer written by TF-A firmware
  */
-typedef struct console_ringbuf {
+struct console_ringbuf {
 	struct diag_hdr hdr;
 	struct diag_conf conf;
 	struct circ_wo_buf wo_cbuf;
-} console_ringbuf_t;
+};
 
 /*
  * TF-A ringbuf console utility functions
