@@ -1,6 +1,11 @@
 /*
- * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * Copyright (c) 2017-2018, ARM Limited and Contributors. All rights reserved.
+ * Copyright (c) 2018,2020 The Linux Foundation. All rights reserved.
  *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -14,10 +19,10 @@
  * Ring-buffer console driver.
  *
  * All log output is written into an in-memory circular buffer
- * (console_ringbuf_t). On Lemans this buffer is a BL31 global object
- * (BSS-backed), while a platform slot is used only to publish the pointer
- * to that buffer for dump tooling discovery. Platforms with dedicated
- * IMEM may place the buffer there instead.
+ * (console_ringbuf_t) that lives in TZ IMEM (or a BSS global on
+ * platforms without dedicated IMEM).  Its address is published to
+ * shared IMEM at boot so that host-side tools (CMM scripts, Python
+ * parsers, HLOS) can read the log post-mortem.
  *
  * Timestamp format
  * ----------------
@@ -45,11 +50,11 @@
  *
  * Thread safety
  * -------------
- * The stash and ring-buffer metadata are shared global state. Runtime callers
- * can execute concurrently on multiple CPUs, so this driver serializes all
- * putc activity with a lock in console_ringbuf_putc. The lock covers both
- * stash use and head/wrap updates to avoid control-flow and buffer corruption
- * races.
+ * The stash is a single global area, not per-CPU.  This matches the
+ * upstream crash_console_reg_stash pattern in crash_console_helpers.S
+ * which carries the same caveat.  Concurrent use by multiple CPUs may
+ * produce interleaved output but will not corrupt the ring buffer itself
+ * (each individual strb to buf[head] is atomic at the byte level).
  */
 
 /* -----------------------------------------------------------------------
@@ -91,17 +96,6 @@ ringbuf_putc_stash:
 	.align	0
 ringbuf_start_of_str:
 	.byte	1
-
-/* -----------------------------------------------------------------------
- * .data.ringbuf_putc_lock
- *
- * Global lock that serializes console_ringbuf_putc() across CPUs.
- * 0 = unlocked, 1 = locked.
- * ----------------------------------------------------------------------- */
-.section .data.ringbuf_putc_lock
-	.align	2
-ringbuf_putc_lock:
-	.word	0
 
 	.globl	qti_console_ringbuf_register
 	.globl	console_ringbuf_putc
@@ -211,18 +205,6 @@ endfunc console_ringbuf_putc_internal
  * is clobbered by the callee.
  * ----------------------------------------------------------------------- */
 func console_ringbuf_putc
-	/* ------------------------------------------------------------------
-	 * Acquire the global putc lock before touching shared stash/state.
-	 * ------------------------------------------------------------------ */
-	adrp	x16, ringbuf_putc_lock
-	add	x16, x16, :lo12:ringbuf_putc_lock
-ringbuf_putc_lock_retry:
-	ldaxr	w17, [x16]			/* w17 = lock value */
-	cbnz	w17, ringbuf_putc_lock_retry
-	mov	w17, #1				/* attempt to set the lock: */
-	stxr	w2, w17, [x16]
-	cbnz	w2, ringbuf_putc_lock_retry /* atomic write of lock failed */
-
 	/* ------------------------------------------------------------------
 	 * Step 1: Save the caller's link register and console_t* to the
 	 * stash.  x30 must be preserved because the bl instructions below
@@ -338,17 +320,14 @@ putc_write_char:
 
 putc_do_write:
 	/*
-	 * Write the final character, release the lock, restore caller's
-	 * x30, and return to the original caller.
+	 * Restore the caller's link register from the stash, then
+	 * tail-call putc_internal to write the character and return
+	 * directly to the original caller (no extra stack frame).
 	 */
-	bl	console_ringbuf_putc_internal
-	adrp	x16, ringbuf_putc_lock
-	add	x16, x16, :lo12:ringbuf_putc_lock
-	stlr	wzr, [x16]		/* zero the lock */
 	adrp	x2, ringbuf_putc_stash
 	add	x2, x2, :lo12:ringbuf_putc_stash
 	ldr	x30, [x2, #0]		/* restore caller's x30              */
-	ret
+	b	console_ringbuf_putc_internal	/* tail call                 */
 endfunc console_ringbuf_putc
 
 /* -----------------------------------------------------------------------

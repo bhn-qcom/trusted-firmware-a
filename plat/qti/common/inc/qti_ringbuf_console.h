@@ -1,6 +1,11 @@
 /*
- * Copyright (c) 2026, Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * Copyright (c) 2017-2018, ARM Limited and Contributors. All rights reserved.
+ * Copyright (c) 2018,2020 The Linux Foundation. All rights reserved.
  *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -18,19 +23,24 @@
 #define CONSOLE_RINGBUF_T_HEAD		(U(5) * U(4))
 #define CONSOLE_RINGBUF_T_LOG_BUF	(U(6) * U(4))
 
+
 #ifndef __ASSEMBLER__
 
 #define TFA_BUFFER_REGION_SIZE	0x1000  /* 4k bytes */
 #define PLAT_QTI_RING_BUF_SIZE	\
-	(TFA_BUFFER_REGION_SIZE - CONSOLE_RINGBUF_T_LOG_BUF)
+	(TFA_BUFFER_REGION_SIZE - 32) /* 4k - 32 (24 bytes for members) bytes */
 #define DIAG_VERSION		1          /* Structure version */
 #define DIAG_MAGIC_INIT		0x47414944 /* "DIAG" in ASCII, buffer initialized and ready */
+#define DIAG_MAGIC_FAILED	0xDEADBEEF /* Initialization failed */
+#define DIAG_MAGIC_DLOAD	0xD15AB1ED /* DLOAD mode - logging disabled */
+#define DLOAD_MAGIC_COOKIE	0x10       /* Download mode detection value */
 
 /**
  * struct diag_hdr - Diagnostic region identity header
  *
  * @version:    Layout version of the diagnostic region (DIAG_VERSION)
- * @magic:      State indicator written during init (DIAG_MAGIC_INIT)
+ * @magic:      State indicator written during init; one of DIAG_MAGIC_INIT,
+ *              DIAG_MAGIC_FAILED, or DIAG_MAGIC_DLOAD
  */
 struct diag_hdr {
 	uint32_t version;
@@ -88,15 +98,15 @@ typedef struct console_ringbuf {
  * @param[in]    ringbuf     ringbuf object ptr
  * @return - cluster id if found successful, otherwise return error
  */
-int qti_console_ringbuf_register(console_t *console,
-				 struct console_ringbuf *ringbuf);
+int qti_console_ringbuf_register(console_t *console, console_ringbuf_t *ringbuf);
 
 /**
  * Initializes a TF-A ringbuf object
  *
  * @param[in]    ringbuf     ringbuf obj ptr
  */
-void qti_console_ringbuf_init(struct console_ringbuf *ringbuf);
+void qti_console_ringbuf_init(console_ringbuf_t *ringbuf);
+
 
 #endif /* __ASSEMBLER__ */
 
