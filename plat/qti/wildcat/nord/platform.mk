@@ -148,6 +148,8 @@ PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
 include drivers/qti/chipinfo/chipinfo.mk
+include drivers/qti/cmd_db/cmd_db.mk
+include drivers/qti/rpmh/rpmh.mk
 include drivers/qti/qgic/qgic.mk
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
 				plat/common/aarch64/crash_console_helpers.S    \
