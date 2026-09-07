@@ -41,6 +41,7 @@
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
 
+<<<<<<< HEAD
 /* Ringbuf definition */
 /* For platform with TZ imem */
 #ifdef TFA_IMEM_BASE
@@ -50,6 +51,34 @@ console_ringbuf_t *g_qti_bl31_ringbuf_ptr =
 /* For platform without TZ imem, place in DDRM */
 console_ringbuf_t g_qti_bl31_ringbuf;
 console_ringbuf_t *g_qti_bl31_ringbuf_ptr = &g_qti_bl31_ringbuf;
+=======
+#ifdef QTI_USE_TMECOM
+/*
+ * TME message/interface API headers.  These live on include paths added only
+ * by drivers/qti/tme/tme.mk, so they must stay behind QTI_USE_TMECOM - other
+ * wildcat platforms (e.g. hamoa) do not include tme.mk and would fail to
+ * compile this file otherwise.
+ */
+#include <IxErrno.h>
+#include <TmeInterfaces.h>
+#include <TmeInterfacesDefs.h>
+#include <TmeMessage.h>
+#include <qcbor.h>
+#include <qcbor_spiffy_decode.h>
+
+#include <drivers/qti/tme/tme_boot_test.h>
+#endif
+
+/* Ringbuf definition */
+/* For platform with TZ imem */
+#ifdef TFA_IMEM_BASE
+struct console_ringbuf *g_qti_bl31_ringbuf_ptr =
+					(struct console_ringbuf *)TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE;
+#else
+/* For platform without TZ imem, place in DDRM */
+struct console_ringbuf g_qti_bl31_ringbuf;
+struct console_ringbuf *g_qti_bl31_ringbuf_ptr = &g_qti_bl31_ringbuf;
+>>>>>>> 5dd94e4bc (feat: TME-COMM enablement)
 #endif /* TFA_IMEM_BASE */
 
 /* Sysini related flags */

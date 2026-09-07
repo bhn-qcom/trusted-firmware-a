@@ -227,7 +227,6 @@ $(warning BL31QTILIB_PATH is not provided while building, using stub \
 		implementation. THIS FIRMWARE WILL NOT BOOT!)
 BL31_SOURCES	+=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_interface_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_version_strings_stub.c
-
 else
 # use library provided by BL31QTILIB_PATH
 LDFLAGS += -L $(dir $(BL31QTILIB_PATH))
