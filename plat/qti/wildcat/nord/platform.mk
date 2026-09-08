@@ -250,4 +250,8 @@ endif
 BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
 
+# TMECOM
+QTI_TMECOM	:=	1
+$(eval $(call add_define,QTI_USE_TMECOM))
+include drivers/qti/tme/tme.mk
 include $(QTI_PLAT_PATH)/common/common.mk
