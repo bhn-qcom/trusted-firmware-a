@@ -7,7 +7,7 @@
 /*
  * TMECOM - Trusted Management Engine Communication.
  *
- * Uses the qcom_mbox polling mailbox API.  Does not depend on GLink.
+ * Uses the QTI_mbox polling mailbox API.  Does not depend on GLink.
  *
  * Every message - request and response - is framed on the wire as:
  *
@@ -32,7 +32,7 @@
 #include <lib/libc/errno.h>
 #include <lib/utils_def.h>
 
-#include <drivers/qti/mbox/qcom_mbox.h>
+#include <drivers/qti/mbox/qti_mbox.h>
 #include <drivers/qti/tmecom/tmecom.h>
 
 #include <tmecom_crc.h>
@@ -41,7 +41,7 @@
 #define TMECOM_CONNECT_TIMEOUT_US	5000000U
 #define TMECOM_INITIAL_TXN_ID		0x00000001U
 
-static struct qcom_mbox_chan	*g_chan;
+static struct qti_mbox_chan	*g_chan;
 static bool			 g_connected;
 static size_t			 g_mtu;
 
@@ -140,17 +140,21 @@ static int tmecom_validate_response(size_t msg_size, uint32_t expected_txn_id)
 static int tmecom_probe_rx(void)
 {
 	uint32_t events;
+	int rc;
 
-	events = qcom_mbox_process(g_chan);
-	if ((events & QCOM_MBOX_EVT_ERROR) != 0U) {
+	rc = qti_mbox_process(g_chan, &events);
+	if (rc != 0) {
+		return rc;
+	}
+	if ((events & QTI_MBOX_EVT_ERROR) != 0U) {
 		return -EIO;
 	}
-	if ((events & (QCOM_MBOX_EVT_DISCONNECTED |
-		       QCOM_MBOX_EVT_REMOTE_RESET)) != 0U) {
+	if ((events & (QTI_MBOX_EVT_DISCONNECTED |
+		       QTI_MBOX_EVT_REMOTE_RESET)) != 0U) {
 		g_connected = false;
 		return -ENODEV;
 	}
-	if ((events & QCOM_MBOX_EVT_RX_READY) != 0U) {
+	if ((events & QTI_MBOX_EVT_RX_READY) != 0U) {
 		return 1;
 	}
 	return 0;
@@ -171,18 +175,18 @@ static int tmecom_fetch_mtu(void)
 {
 	int rc;
 
-	rc = qcom_mbox_get_mtu(g_chan, &g_mtu);
+	rc = qti_mbox_get_mtu(g_chan, &g_mtu);
 	if (rc != 0) {
-		qcom_mbox_release(g_chan);
+		qti_mbox_release(g_chan);
 		g_chan = NULL;
-		ERROR("qcom_mbox_get_mtu err:%d\n", rc);
+		ERROR("QTI_mbox_get_mtu err:%d\n", rc);
 		return rc;
 	}
 
 	if (g_mtu <= TMECOM_MSG_HDR_SIZE) {
-		qcom_mbox_release(g_chan);
+		qti_mbox_release(g_chan);
 		g_chan = NULL;
-		ERROR("qcom_mbox_get_mtu bad mtu:%zu\n", g_mtu);
+		ERROR("QTI_mbox_get_mtu bad mtu:%zu\n", g_mtu);
 		return -ENODEV;
 	}
 
@@ -202,26 +206,32 @@ int tmecom_init(const char *channel_name)
 
 	tmecom_deinit();
 
-	rc = qcom_mbox_request(channel_name, &g_chan);
+	rc = qti_mbox_request(channel_name, &g_chan);
 	if (rc != 0) {
-		ERROR("qcom_mbox_request failed err:%d\n", rc);
+		ERROR("QTI_mbox_request failed err:%d\n", rc);
 		return rc;
 	}
 
 	/*
-	 * The transport connects during qcom_mbox_request().  Poll for
+	 * The transport connects during QTI_mbox_request().  Poll for
 	 * the CONNECTED event; if not observed, check for ERROR only.
 	 */
 	deadline = timeout_init_us(TMECOM_CONNECT_TIMEOUT_US);
 	do {
-		events = qcom_mbox_process(g_chan);
-		if ((events & QCOM_MBOX_EVT_ERROR) != 0U) {
-			qcom_mbox_release(g_chan);
+		rc = qti_mbox_process(g_chan, &events);
+		if (rc != 0) {
+			qti_mbox_release(g_chan);
 			g_chan = NULL;
-			ERROR("qcom_mbox_process QCOM_MBOX_EVT_ERROR\n");
+			ERROR("qti_mbox_process err:%d\n", rc);
+			return rc;
+		}
+		if ((events & QTI_MBOX_EVT_ERROR) != 0U) {
+			qti_mbox_release(g_chan);
+			g_chan = NULL;
+			ERROR("QTI_mbox_process QTI_MBOX_EVT_ERROR\n");
 			return -EIO;
 		}
-		if ((events & QCOM_MBOX_EVT_CONNECTED) != 0U) {
+		if ((events & QTI_MBOX_EVT_CONNECTED) != 0U) {
 			rc = tmecom_fetch_mtu();
 			if (rc != 0) {
 				return rc;
@@ -233,7 +243,7 @@ int tmecom_init(const char *channel_name)
 
 	/*
 	 * The poll expired without a CONNECTED event.  The remote may have
-	 * connected before qcom_mbox_process() was first called, in which case
+	 * connected before QTI_mbox_process() was first called, in which case
 	 * the event was never observable; proceed, but fetch the MTU here since
 	 * the connected path above did not run.  A successful MTU fetch implies
 	 * the remote did publish a valid layout.
@@ -253,7 +263,7 @@ int tmecom_init(const char *channel_name)
 void tmecom_deinit(void)
 {
 	if (g_chan != NULL) {
-		qcom_mbox_release(g_chan);
+		qti_mbox_release(g_chan);
 		g_chan = NULL;
 	}
 	g_connected = false;
@@ -299,7 +309,7 @@ int tmecom_send(const void *req, size_t req_size, uint32_t *txn_id)
 
 	msg_size = tmecom_build_msg(req, req_size, current_txn_id);
 
-	rc = qcom_mbox_send(g_chan, g_send_buf, msg_size);
+	rc = qti_mbox_send(g_chan, g_send_buf, msg_size);
 	if (rc != 0) {
 		return rc;
 	}
@@ -346,13 +356,13 @@ int tmecom_recv(uint32_t txn_id, void *rsp, size_t *rsp_size)
 	g_pending = false;
 
 	recv_size = sizeof(g_recv_buf);
-	rc = qcom_mbox_recv(g_chan, g_recv_buf, &recv_size);
+	rc = qti_mbox_recv(g_chan, g_recv_buf, &recv_size);
 	if (rc == -ENOSPC) {
-		ERROR("qcom_mbox_recv ENOSPC need:%zu\n", recv_size);
+		ERROR("QTI_mbox_recv ENOSPC need:%zu\n", recv_size);
 		return -EIO;
 	}
 	if (rc != 0) {
-		ERROR("qcom_mbox_recv err:%d\n", rc);
+		ERROR("QTI_mbox_recv err:%d\n", rc);
 		return rc;
 	}
 
@@ -408,18 +418,23 @@ int tmecom_send_recv(const void *req, size_t req_size,
 bool tmecom_is_connected(void)
 {
 	uint32_t events;
+	int rc;
 
 	if (g_chan == NULL) {
 		return false;
 	}
 
-	events = qcom_mbox_process(g_chan);
-	if ((events & (QCOM_MBOX_EVT_DISCONNECTED |
-		       QCOM_MBOX_EVT_REMOTE_RESET |
-		       QCOM_MBOX_EVT_ERROR)) != 0U) {
+	rc = qti_mbox_process(g_chan, &events);
+	if (rc != 0) {
+		g_connected = false;
+		return g_connected;
+	}
+	if ((events & (QTI_MBOX_EVT_DISCONNECTED |
+		       QTI_MBOX_EVT_REMOTE_RESET |
+		       QTI_MBOX_EVT_ERROR)) != 0U) {
 		g_connected = false;
 	}
-	if ((events & QCOM_MBOX_EVT_CONNECTED) != 0U) {
+	if ((events & QTI_MBOX_EVT_CONNECTED) != 0U) {
 		g_connected = true;
 	}
 	return g_connected;
