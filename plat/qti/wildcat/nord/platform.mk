@@ -144,6 +144,7 @@ endif
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
+PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -189,6 +190,7 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${CPU_SOURCES}					\
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
 

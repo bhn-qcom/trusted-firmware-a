@@ -277,6 +277,12 @@ extern char OEM_IMAGE_VERSION_STRING_AUTO_UPDATED[];
 extern char OEM_IMAGE_UUID_STRING_AUTO_UPDATED[];
 extern char OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED[];
 
+#pragma weak plat_cpuss_config
+
+void plat_cpuss_config(void)
+{
+}
+
 void bl31_platform_setup(void)
 {
 	int ret;
@@ -289,6 +295,9 @@ void bl31_platform_setup(void)
 	bl31qtilib_set_boot_cpu_num(plat_my_core_pos());
 
 	bl31qtilib_bl31_platform_early_setup();
+
+	/* Configures platform CPUSS specific configurations */
+	plat_cpuss_config();
 
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();

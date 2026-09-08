@@ -115,6 +115,31 @@ uint32_t plat_qti_get_core_id_from_logical_cpu_num(uint32_t cpu_num);
  */
 uint32_t plat_qti_logical_cpu_num_to_mpidr(uint32_t cpu_num);
 
+/**
+ *  @brief - Configures CPUSS configs
+ *
+ *  @param - void
+ *  @return - void
+ */
+
+void plat_cpuss_config(void);
+
+/*
+ * INTU interrupt-type helpers (wildcat_common.c).
+ *
+ * configure_irq_type() programs a CLR_EDGE / SET_LEVEL register pair:
+ *   clr_edge_base[i]  = cfg_arr[i]
+ *   set_level_base[i] = ~cfg_arr[i]
+ * with a readback after each write for ordering.
+ *
+ * configure_irq_array() writes cfg_arr[] verbatim to consecutive 32-bit
+ * registers starting at base, again with a readback after each write.
+ */
+void configure_irq_type(uintptr_t clr_edge_base, uintptr_t set_level_base,
+			const uint32_t *cfg_arr, unsigned int num_words);
+void configure_irq_array(uintptr_t base, const uint32_t *cfg_arr,
+			 unsigned int num_words);
+
 typedef struct chip_id_info {
 	uint16_t jtag_id;
 	uint16_t chipinfo_id;
