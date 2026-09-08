@@ -37,7 +37,6 @@
 #include <qti_ringbuf_console.h>
 #include <qti_sbl_shared_info.h>
 #include <qti_uart_console.h>
-#include <sysini.h>
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
 
@@ -51,21 +50,6 @@ console_ringbuf_t *g_qti_bl31_ringbuf_ptr =
 console_ringbuf_t g_qti_bl31_ringbuf;
 console_ringbuf_t *g_qti_bl31_ringbuf_ptr = &g_qti_bl31_ringbuf;
 #endif /* TFA_IMEM_BASE */
-
-/* Sysini related flags */
-static int cpuss_sysini_done __section(".tzfw_coherent_mem");
-static int cluster_sysini_done[PLAT_CLUSTER_COUNT]
-	__section(".tzfw_coherent_mem");
-
-/*
- * The macro ``DEFINE_BAKERY_LOCK`` allocates locks in section `bakery_lock`
- */
-#if !HW_ASSISTED_COHERENCY
-DEFINE_BAKERY_LOCK(cluster_sysini_lock[PLAT_CLUSTER_COUNT]);
-#else
-static spinlock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
-	__section(".tzfw_coherent_mem");
-#endif
 
 static boot_qsee_interface *sbl_qsee_interface;
 
@@ -139,11 +123,6 @@ static bool qti_aux_param_handler(struct bl_aux_param_header *param)
 	}
 }
 
-void qti_cpuss_poll_sysini_reset(void) /* NEEDSWORK */
-{
-	/* can be implemented in bl31qtilib */
-}
-
 void qti_el3_sys_regs_init(void) /* NEEDSWORK */
 {
 	/* can be implemented in bl31qtilib */
@@ -166,60 +145,9 @@ void qti_el3_sys_regs_init(void) /* NEEDSWORK */
 
 	/* Clear SCTLR_EL2 */
 }
-/***************************************************************************
- * This function invokes cpuss and cluster sysini. It is expected
- * that sysini is executed before MMUs are enabled.
- **************************************************************************/
+
 void plat_qti_cpu_boot_setup(void)
 {
-	unsigned int cluster_id;
-
-	/*
-	 * One-Time Synchronization of CPUCP and APSS required before CPUSS
-	 * sysini
-	 */
-	qti_cpuss_poll_sysini_reset();
-	cluster_id = find_cluster_id();
-
-	/* Clear all values if present */
-	memset(cluster_sysini_lock, 0, sizeof(cluster_sysini_lock));
-
-	/* CPUSS sysini - execute only once */
-	if (cpuss_sysini_done != 1) {
-		cpuss_aarch64_por_sysini(1, (uintptr_t)NULL);
-		cpuss_sysini_done = 1;
-	}
-#if !HW_ASSISTED_COHERENCY
-	bakery_lock_get(&cluster_sysini_lock[cluster_id]);
-#else
-#ifndef DISABLE_SPINLOCK
-	spin_lock(&cluster_sysini_lock[cluster_id]);
-#endif /* DISABLE_SPINLOCK */
-#endif
-
-	/* Cluster sysini - execute once per cluster */
-	/* Note: Hoya SOCs have single FCM cluster */
-	if (cluster_sysini_done[cluster_id] == 0) {
-		cluster_aarch64_sysini(
-			((SYSINI_CLUSTER_POWER_UP
-			  << SYSINI_CLUSTER_POWER_SHIFT) &
-			 SYSINI_CLUSTER_POWER_MASK) |
-				((cluster_id << SYSINI_CLUSTER_ID_SHIFT) &
-				 SYSINI_CLUSTER_ID_MASK),
-			(uintptr_t)NULL);
-		/* (SYSINI_CLUSTER_POWER_UP,(uintptr_t)NULL); */
-		cluster_sysini_done[cluster_id] = 1;
-	}
-
-#if !HW_ASSISTED_COHERENCY
-	bakery_lock_release(&cluster_sysini_lock[cluster_id]);
-#else
-#ifndef DISABLE_SPINLOCK
-	spin_unlock(&cluster_sysini_lock[cluster_id]);
-#endif /* DISABLE_SPINLOCK */
-#endif
-
-	/* Initialize system registers that can only be done in EL3 */
 	qti_el3_sys_regs_init();
 }
 
@@ -349,6 +277,12 @@ extern char OEM_IMAGE_VERSION_STRING_AUTO_UPDATED[];
 extern char OEM_IMAGE_UUID_STRING_AUTO_UPDATED[];
 extern char OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED[];
 
+#pragma weak plat_cpuss_config
+
+void plat_cpuss_config(void)
+{
+}
+
 void bl31_platform_setup(void)
 {
 	int ret;
@@ -361,6 +295,9 @@ void bl31_platform_setup(void)
 	bl31qtilib_set_boot_cpu_num(plat_my_core_pos());
 
 	bl31qtilib_bl31_platform_early_setup();
+
+	/* Configures platform CPUSS specific configurations */
+	plat_cpuss_config();
 
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();

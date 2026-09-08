@@ -144,6 +144,7 @@ endif
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
+PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -181,7 +182,7 @@ QTI_NCC_CPU		:= 1
 #driver can expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
-CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/cortex_phoenix.S
+CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_phoenix.S
 
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
@@ -189,6 +190,7 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${CPU_SOURCES}					\
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
 
@@ -233,16 +235,6 @@ else
 LDFLAGS += -L $(dir $(BL31QTILIB_PATH))
 LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(BL31QTILIB_PATH)))
 
-endif
-
-# Override this on the command line to point to the SysINI library.
-SYSINIQTILIB_PATH ?= $(QTI_PLAT_PATH)/sysini/lib/$(CHIPSET)/libsysini.a
-ifeq ($(SYSINIQTILIB_PATH),)
-$(error Please provide path to libsysini.a in SYSINIQTILIB_PATH)
-else
-$(eval $(call add_define,QTI_USE_SYSINI_LIB))
-LDFLAGS += -L $(dir $(SYSINIQTILIB_PATH))
-LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(SYSINIQTILIB_PATH)))
 endif
 
 # Always use the SPD-agnostic adapter for NORD. These stubs do not forward
