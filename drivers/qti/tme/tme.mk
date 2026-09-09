@@ -36,7 +36,6 @@ BL31_SOURCES	+=	${TME_DRIVER_PATH}/tmecom_mbox.c			\
 			${TME_DRIVER_PATH}/tmeintf/TmeNotifyErrFatal.c		\
 			${TME_DRIVER_PATH}/tmeintf/TmePassthroughAwait.c	\
 			${TME_DRIVER_PATH}/tmeintf/TmePassthroughCmd.c		\
-			${TME_DRIVER_PATH}/tmeintf/TmeSHADigest.c		\
 			${TME_DRIVER_PATH}/tmeintf/TmeSetXpuDbgar.c		\
 			${TME_DRIVER_PATH}/tmeintf/TmeUpdateRollbackVersion.c	\
 			${TME_DRIVER_PATH}/tmeintf/TmeWriteConfigRegister.c	\

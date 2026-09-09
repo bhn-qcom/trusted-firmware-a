@@ -21,7 +21,7 @@ extern "C" {
 #include <stddef.h>
 
 /*===========================================================================
-                         MACRO DECLARATIONS
+		 MACRO DECLARATIONS
 ===========================================================================*/
 
 /** Maximum channel name length in bytes (including null terminator) */
@@ -55,14 +55,14 @@ extern "C" {
  *  @param[in,out] link_id  The glink_link_id_type variable to initialize.
  */
 #define GLINK_LINK_ID_STRUCT_INIT(link_id)  \
-    (link_id).xport         = 0;            \
-    (link_id).remote_ss     = 0;            \
-    (link_id).link_notifier = 0;            \
-    (link_id).handle        = 0;            \
-    (link_id).version       = GLINK_LINK_ID_VER;
+		(link_id).xport         = 0;            \
+		(link_id).remote_ss     = 0;            \
+		(link_id).link_notifier = 0;            \
+		(link_id).handle        = 0;            \
+		(link_id).version       = GLINK_LINK_ID_VER;
 
 /*===========================================================================
-                         TYPE DECLARATIONS
+		 TYPE DECLARATIONS
 ===========================================================================*/
 
 /**
@@ -72,27 +72,27 @@ extern "C" {
  * specific failure reason.
  */
 typedef enum {
-    GLINK_STATUS_SUCCESS                = 0,   /**< Operation succeeded */
-    GLINK_STATUS_INVALID_PARAM          = -1,  /**< Invalid parameter */
-    GLINK_STATUS_NOT_INIT               = -2,  /**< Transport not initialized */
-    GLINK_STATUS_OUT_OF_RESOURCES       = -3,  /**< Insufficient resources */
-    GLINK_STATUS_NO_TRANSPORT           = -4,  /**< No matching transport found */
-    GLINK_STATUS_NO_REMOTE_INTENT_FOUND = -5,  /**< No remote rx intent queued */
-    GLINK_STATUS_CH_NOT_FULLY_OPENED    = -6,  /**< Channel not fully open */
-    GLINK_STATUS_CH_ALREADY_CLOSED      = -7,  /**< Channel already closed */
-    GLINK_STATUS_API_NOT_SUPPORTED      = -8,  /**< API not supported by transport */
-    GLINK_STATUS_QOS_FAILURE            = -9,  /**< QoS algorithm failure */
-    GLINK_STATUS_TX_CMD_FAILURE         = -10, /**< TX command failure */
-    GLINK_STATUS_FAILURE                = -11, /**< Generic failure */
-    GLINK_STATUS_TIMEOUT                = -12, /**< Operation timed out */
+		GLINK_STATUS_SUCCESS                = 0,   /**< Operation succeeded */
+		GLINK_STATUS_INVALID_PARAM          = -1,  /**< Invalid parameter */
+		GLINK_STATUS_NOT_INIT               = -2,  /**< Transport not initialized */
+		GLINK_STATUS_OUT_OF_RESOURCES       = -3,  /**< Insufficient resources */
+		GLINK_STATUS_NO_TRANSPORT           = -4,  /**< No matching transport found */
+		GLINK_STATUS_NO_REMOTE_INTENT_FOUND = -5,  /**< No remote rx intent queued */
+		GLINK_STATUS_CH_NOT_FULLY_OPENED    = -6,  /**< Channel not fully open */
+		GLINK_STATUS_CH_ALREADY_CLOSED      = -7,  /**< Channel already closed */
+		GLINK_STATUS_API_NOT_SUPPORTED      = -8,  /**< API not supported by transport */
+		GLINK_STATUS_QOS_FAILURE            = -9,  /**< QoS algorithm failure */
+		GLINK_STATUS_TX_CMD_FAILURE         = -10, /**< TX command failure */
+		GLINK_STATUS_FAILURE                = -11, /**< Generic failure */
+		GLINK_STATUS_TIMEOUT                = -12, /**< Operation timed out */
 } glink_err_type;
 
 /**
  * glink_link_state_type - transport-level link state.
  */
 typedef enum {
-    GLINK_LINK_STATE_UP,   /**< Link is online and ready */
-    GLINK_LINK_STATE_DOWN, /**< Link is offline (SSR or not yet up) */
+		GLINK_LINK_STATE_UP,   /**< Link is online and ready */
+		GLINK_LINK_STATE_DOWN, /**< Link is offline (SSR or not yet up) */
 } glink_link_state_type;
 
 /**
@@ -101,9 +101,9 @@ typedef enum {
  * Delivered to the notify_state callback registered in glink_open_config_type.
  */
 typedef enum {
-    GLINK_CONNECTED = 0,       /**< E2E channel fully open; data can flow */
-    GLINK_LOCAL_DISCONNECTED,  /**< Local glink_close() sequence completed */
-    GLINK_REMOTE_DISCONNECTED, /**< Remote side initiated disconnect */
+		GLINK_CONNECTED = 0,       /**< E2E channel fully open; data can flow */
+		GLINK_LOCAL_DISCONNECTED,  /**< Local glink_close() sequence completed */
+		GLINK_REMOTE_DISCONNECTED, /**< Remote side initiated disconnect */
 } glink_channel_event_type;
 
 /**
@@ -134,9 +134,9 @@ typedef struct glink_link_notif_data_type *glink_link_handle_type;
  * @link_state: New link state (GLINK_LINK_STATE_UP or GLINK_LINK_STATE_DOWN).
  */
 typedef struct glink_link_info_t {
-    const char           *xport;
-    const char           *remote_ss;
-    glink_link_state_type link_state;
+		const char           *xport;
+		const char           *remote_ss;
+		glink_link_state_type link_state;
 } glink_link_info_type;
 
 /*---------------------------------------------------------------------------
@@ -153,8 +153,8 @@ typedef struct glink_link_info_t {
  * @param[in] priv       Caller's private data supplied at registration time.
  */
 typedef void (*glink_link_state_notif_cb)(
-    glink_link_info_type *link_info,
-    void                 *priv);
+		glink_link_info_type *link_info,
+		void                 *priv);
 
 /**
  * glink_rx_notification_cb - receive data notification callback.
@@ -170,12 +170,12 @@ typedef void (*glink_link_state_notif_cb)(
  * @param[in] intent_used Intent space consumed (equals size for QMP).
  */
 typedef void (*glink_rx_notification_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    const void        *pkt_priv,
-    const void        *ptr,
-    size_t             size,
-    size_t             intent_used);
+		glink_handle_type  handle,
+		const void        *priv,
+		const void        *pkt_priv,
+		const void        *ptr,
+		size_t             size,
+		size_t             intent_used);
 
 /**
  * glink_buffer_provider_fn - buffer provider function for vector TX/RX.
@@ -189,9 +189,9 @@ typedef void (*glink_rx_notification_cb)(
  * @return Pointer to the contiguous buffer region, or NULL on error.
  */
 typedef void *(*glink_buffer_provider_fn)(
-    void   *iovec,
-    size_t  offset,
-    size_t *size);
+		void   *iovec,
+		size_t  offset,
+		size_t *size);
 
 /**
  * glink_rxv_notification_cb - vector receive notification callback.
@@ -209,14 +209,14 @@ typedef void *(*glink_buffer_provider_fn)(
  * @param[in] pprovider   Buffer provider for physical address space.
  */
 typedef void (*glink_rxv_notification_cb)(
-    glink_handle_type        handle,
-    const void              *priv,
-    const void              *pkt_priv,
-    void                    *iovec,
-    size_t                   size,
-    size_t                   intent_used,
-    glink_buffer_provider_fn vprovider,
-    glink_buffer_provider_fn pprovider);
+		glink_handle_type        handle,
+		const void              *priv,
+		const void              *pkt_priv,
+		void                    *iovec,
+		size_t                   size,
+		size_t                   intent_used,
+		glink_buffer_provider_fn vprovider,
+		glink_buffer_provider_fn pprovider);
 
 /**
  * glink_tx_notification_cb - transmit-done notification callback.
@@ -231,11 +231,11 @@ typedef void (*glink_rxv_notification_cb)(
  * @param[in] size      Size of the transmitted payload in bytes.
  */
 typedef void (*glink_tx_notification_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    const void        *pkt_priv,
-    const void        *ptr,
-    size_t             size);
+		glink_handle_type  handle,
+		const void        *priv,
+		const void        *pkt_priv,
+		const void        *ptr,
+		size_t             size);
 
 /**
  * glink_state_notification_cb - channel state change notification callback.
@@ -248,9 +248,9 @@ typedef void (*glink_tx_notification_cb)(
  * @param[in] event   New channel state (see glink_channel_event_type).
  */
 typedef void (*glink_state_notification_cb)(
-    glink_handle_type        handle,
-    const void              *priv,
-    glink_channel_event_type  event);
+		glink_handle_type        handle,
+		const void              *priv,
+		glink_channel_event_type  event);
 
 /**
  * glink_notify_rx_intent_req_cb - remote rx intent request callback.
@@ -266,9 +266,9 @@ typedef void (*glink_state_notification_cb)(
  * @return TRUE to accept the request; FALSE to deny.
  */
 typedef boolean (*glink_notify_rx_intent_req_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    size_t             req_size);
+		glink_handle_type  handle,
+		const void        *priv,
+		size_t             req_size);
 
 /**
  * glink_notify_rx_intent_cb - new rx intent arrival callback.
@@ -280,9 +280,9 @@ typedef boolean (*glink_notify_rx_intent_req_cb)(
  * @param[in] size    Size of the new intent in bytes.
  */
 typedef void (*glink_notify_rx_intent_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    size_t             size);
+		glink_handle_type  handle,
+		const void        *priv,
+		size_t             size);
 
 /**
  * glink_notify_rx_sigs_cb - control signal change notification callback.
@@ -295,10 +295,10 @@ typedef void (*glink_notify_rx_intent_cb)(
  * @param[in] curr    Current remote signal state (32-bit bitmask).
  */
 typedef void (*glink_notify_rx_sigs_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    uint32             prev,
-    uint32             curr);
+		glink_handle_type  handle,
+		const void        *priv,
+		uint32             prev,
+		uint32             curr);
 
 /**
  * glink_notify_rx_abort_cb - rx intent abort notification callback.
@@ -311,9 +311,9 @@ typedef void (*glink_notify_rx_sigs_cb)(
  * @param[in] pkt_priv  Per-packet private context associated with the intent.
  */
 typedef void (*glink_notify_rx_abort_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    const void        *pkt_priv);
+		glink_handle_type  handle,
+		const void        *priv,
+		const void        *pkt_priv);
 
 /**
  * glink_notify_tx_abort_cb - TX abort notification callback.
@@ -326,9 +326,9 @@ typedef void (*glink_notify_rx_abort_cb)(
  * @param[in] pkt_priv  Per-packet private context from the aborted glink_tx().
  */
 typedef void (*glink_notify_tx_abort_cb)(
-    glink_handle_type  handle,
-    const void        *priv,
-    const void        *pkt_priv);
+		glink_handle_type  handle,
+		const void        *priv,
+		const void        *pkt_priv);
 
 /*---------------------------------------------------------------------------
  * Aggregate type declarations
@@ -349,12 +349,12 @@ typedef void (*glink_notify_tx_abort_cb)(
  * @options:       Reserved option flags; set to 0.
  */
 typedef struct glink_link_id_t {
-    unsigned int              version;
-    const char               *xport;
-    const char               *remote_ss;
-    glink_link_state_notif_cb link_notifier;
-    glink_link_handle_type    handle;
-    unsigned int              options;
+		unsigned int              version;
+		const char               *xport;
+		const char               *remote_ss;
+		glink_link_state_notif_cb link_notifier;
+		glink_link_handle_type    handle;
+		unsigned int              options;
 } glink_link_id_type;
 
 /**
@@ -382,24 +382,24 @@ typedef struct glink_link_id_t {
  * @notify_tx_abort:     Callback for TX abort on remote disconnect (optional).
  */
 typedef struct {
-    const char                    *transport;
-    const char                    *remote_ss;
-    const char                    *name;
-    unsigned int                   options;
-    const void                    *priv;
-    glink_rx_notification_cb       notify_rx;
-    glink_rxv_notification_cb      notify_rxv;
-    glink_tx_notification_cb       notify_tx_done;
-    glink_state_notification_cb    notify_state;
-    glink_notify_rx_intent_req_cb  notify_rx_intent_req;
-    glink_notify_rx_intent_cb      notify_rx_intent;
-    glink_notify_rx_sigs_cb        notify_rx_sigs;
-    glink_notify_rx_abort_cb       notify_rx_abort;
-    glink_notify_tx_abort_cb       notify_tx_abort;
+		const char                    *transport;
+		const char                    *remote_ss;
+		const char                    *name;
+		unsigned int                   options;
+		const void                    *priv;
+		glink_rx_notification_cb       notify_rx;
+		glink_rxv_notification_cb      notify_rxv;
+		glink_tx_notification_cb       notify_tx_done;
+		glink_state_notification_cb    notify_state;
+		glink_notify_rx_intent_req_cb  notify_rx_intent_req;
+		glink_notify_rx_intent_cb      notify_rx_intent;
+		glink_notify_rx_sigs_cb        notify_rx_sigs;
+		glink_notify_rx_abort_cb       notify_rx_abort;
+		glink_notify_tx_abort_cb       notify_tx_abort;
 } glink_open_config_type;
 
 /*===========================================================================
-                         PUBLIC API DECLARATIONS
+		 PUBLIC API DECLARATIONS
 ===========================================================================*/
 
 /**
@@ -418,7 +418,7 @@ typedef struct {
  * @sideeffects  Allocates channel resources and signals the remote side.
  */
 glink_err_type glink_open(const glink_open_config_type *cfg_ptr,
-                          glink_handle_type *handle);
+		glink_handle_type *handle);
 
 /**
  * glink_close() - Close a previously opened GLink channel.
@@ -455,10 +455,10 @@ glink_err_type glink_close(glink_handle_type handle);
  * @sideeffects  Causes the remote host to wake up and process the rx packet.
  */
 glink_err_type glink_tx(glink_handle_type handle,
-                        const void       *pkt_priv,
-                        const void       *data,
-                        size_t            size,
-                        uint32            options);
+		const void       *pkt_priv,
+		const void       *data,
+		size_t            size,
+		uint32            options);
 
 /**
  * glink_queue_rx_intent() - Queue a receive intent for the channel.
@@ -473,8 +473,8 @@ glink_err_type glink_tx(glink_handle_type handle,
  * @return GLINK_STATUS_API_NOT_SUPPORTED.
  */
 glink_err_type glink_queue_rx_intent(glink_handle_type handle,
-                                     const void       *pkt_priv,
-                                     size_t            size);
+		 const void       *pkt_priv,
+		 size_t            size);
 
 /**
  * glink_rx_done() - Return a received buffer to the transport layer.
@@ -492,8 +492,8 @@ glink_err_type glink_queue_rx_intent(glink_handle_type handle,
  * @sideeffects  Signals the remote side that the mailbox slot is free.
  */
 glink_err_type glink_rx_done(glink_handle_type handle,
-                             const void       *ptr,
-                             boolean           reuse);
+		 const void       *ptr,
+		 boolean           reuse);
 
 /**
  * glink_notify_clients() - Fire all registered link-state callbacks.
@@ -531,7 +531,7 @@ void glink_notify_clients(void *ctx_ptr, glink_link_state_type link_state);
  *               May invoke the callback immediately if the link is already UP.
  */
 glink_err_type glink_register_link_state_cb(glink_link_id_type *link_id,
-                                            void               *priv);
+		void               *priv);
 
 /**
  * glink_link_state_poll() - Poll the current link state.
@@ -549,7 +549,7 @@ glink_err_type glink_register_link_state_cb(glink_link_id_type *link_id,
  * @return GLINK_STATUS_SUCCESS on success, or a negative glink_err_type code.
  */
 glink_err_type glink_link_state_poll(glink_link_handle_type  handle,
-                                     glink_link_state_type  *state);
+		 glink_link_state_type  *state);
 
 /**
  * glink_rx_poll() - Poll the transport for any new received data.

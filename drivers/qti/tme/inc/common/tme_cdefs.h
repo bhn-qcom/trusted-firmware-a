@@ -1,6 +1,6 @@
-// Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-// All rights reserved.
-// Confidential and Proprietary - Qualcomm Technologies, Inc.
+/* Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. */
+/* All rights reserved. */
+/* Confidential and Proprietary - Qualcomm Technologies, Inc. */
 
 /**
  * @file
@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef __TME_CDEFS_H
-#define __TME_CDEFS_H
+#ifndef TME_CDEFS_H
+#define TME_CDEFS_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +26,7 @@
  * scope.
  */
 #define c_static_assert(cond) \
-  do { switch(0){case 0:case ((cond) ? 1 : 0):;} } while (0)
+	do { switch(0){case 0:case ((cond) ? 1 : 0):;} } while (0)
 
 /**
  * Cast away a "const" qualifier without triggering the `-Wconst-qual`
@@ -39,14 +39,14 @@
  * This is equivalent to C11's _Alignof and alignof.
  */
 #define c_alignof(type) \
-  offsetof( struct { char a; type b; }, b)
+	offsetof( struct { char a; type b; }, b)
 
 /**
  * Return a pointer to a structure of the specified type, given a pointer to
  * and name of one of its members.
  */
 #define c_containerof(ptr, type, member) \
-  ((type*) (((uintptr_t)(void*)ptr) - offsetof(type, member)))
+	((type*) (((uintptr_t)(void*)ptr) - offsetof(type, member)))
 
 /**
  * Return the *length* of an array, which is the number of *elements* it
@@ -58,34 +58,34 @@
  * true for arrays, and not generally for pointers.
  */
 #define C_LENGTHOF(array)                     \
-  ((void const *) &(array) == (void const*) (array)        \
-   ? sizeof (array) / sizeof *(array)         \
-   : 0)
+	((void const *) &(array) == (void const*) (array)        \
+	 ? sizeof (array) / sizeof *(array)         \
+	 : 0)
 
 /**
  * Used to calculate the length of an array for a static assert, where
  * C_LENGTHOF() would not work.
  */
 #define STATIC_LENGTHOF(array) \
-  (sizeof(array) / sizeof(array[0]))
+	(sizeof(array) / sizeof(array[0]))
 
 /**
  * Iterate through all indices in an array.
  */
 #define C_FOR_ARRAY(var, array) \
-  for (var = 0; var < C_LENGTHOF(array); ++var)
+	for (var = 0; var < C_LENGTHOF(array); ++var)
 
 /**
  * Zero a value (set all its bytes to zero).
  */
 #define C_ZERO(value) \
-  memset(&(value), 0, sizeof(value))
+	memset(&(value), 0, sizeof(value))
 
 /**
  * Zero a range of array elements.
  */
 #define C_ZERO_RANGE(ptr, len) \
-  memset((ptr), 0, (len) * sizeof *(ptr))
+	memset((ptr), 0, (len) * sizeof *(ptr))
 
 
-#endif // __TME_CDEFS_H
+#endif /* TME_CDEFS_H */

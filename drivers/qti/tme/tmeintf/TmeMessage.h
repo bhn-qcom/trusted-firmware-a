@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #ifndef TME_MESSAGE_H_INCLUDED
@@ -21,88 +21,88 @@
  * further constrain the range to the 32-bit DDR window [0x80000000, 0x100000000).
  * That API is not available in TF-A, so a portable non-wrapping check is used. */
 #define TME_ADDR_OK(addr, size) \
-  ((size_t)(size) == 0U || \
-   ((uintptr_t)(addr) + (size_t)(size)) > (uintptr_t)(addr))
+	((size_t)(size) == 0U || \
+	 ((uintptr_t)(addr) + (size_t)(size)) > (uintptr_t)(addr))
 
 /* Max CBOR payload that fits inside the tmecom request / response mailbox. */
 #define MAX_CBOR_REQ_LENGTH  (TMECOM_MAX_REQUEST_SIZE  - sizeof(tmecomMsgHdr))
 #define MAX_CBOR_RSP_LENGTH  (TMECOM_MAX_RESPONSE_SIZE - sizeof(tmecomMsgHdr))
 
 /*
- * GetEncodedNumberSize() - Return the number of bytes CBOR needs to encode @number.
+ * get_encoded_number_size() - Return the number of bytes CBOR needs to encode @number.
  */
-size_t GetEncodedNumberSize(uint32_t number);
+size_t get_encoded_number_size(uint32_t number);
 
 /*
- * GetMaxRequestPayload() - Return the maximum raw payload that fits in a CBOR request to TME.
+ * get_max_request_payload() - Return the maximum raw payload that fits in a CBOR request to TME.
  *
  * Accounts for the CBOR tag and length overhead around the payload.
  */
-size_t GetMaxRequestPayload(void);
+size_t get_max_request_payload(void);
 
 /*
- * GetMaxResponsePayload() - Return the maximum raw payload that fits in a CBOR response from TME.
+ * get_max_response_payload() - Return the maximum raw payload that fits in a CBOR response from TME.
  *
  * Accounts for the CBOR tag and length overhead around the payload.
  */
-size_t GetMaxResponsePayload(void);
+size_t get_max_response_payload(void);
 
 /*
- * EncodeMessage() - CBOR-encode @messageBuf into @encodedBuf, tagged with @tag.
+ * encode_message() - CBOR-encode @message_buf into @encoded_buf, tagged with @tag.
  *
  * @param [in]     tag         CBOR tag identifying the TME operation.
- * @param [in]     messageBuf  Raw message bytes to encode.
- * @param [in/out] encodedBuf  Output buffer; on return, len holds encoded size.
+ * @param [in]     message_buf  Raw message bytes to encode.
+ * @param [in/out] encoded_buf  Output buffer; on return, len holds encoded size.
  *
  * @return QCBOR_SUCCESS (0) on success, QCBOR error code otherwise.
  */
-int EncodeMessage(uint32_t tag, const UsefulBufC messageBuf, UsefulBuf *encodedBuf);
+int encode_message(uint32_t tag, const UsefulBufC message_buf, UsefulBuf *encoded_buf);
 
 /*
- * DecodeMessage() - CBOR-decode @encodedBuf into @messageBuf, verifying @tag.
+ * decode_message() - CBOR-decode @encoded_buf into @message_buf, verifying @tag.
  *
  * @param [in]     tag         Expected CBOR tag.
- * @param [in]     encodedBuf  CBOR-encoded input.
- * @param [in/out] messageBuf  Output buffer; on return, len holds decoded size.
+ * @param [in]     encoded_buf  CBOR-encoded input.
+ * @param [in/out] message_buf  Output buffer; on return, len holds decoded size.
  *
  * @return QCBOR_SUCCESS (0) on success, QCBOR/TME error code otherwise.
  */
-int DecodeMessage(uint32_t tag, const UsefulBufC encodedBuf, UsefulBuf *messageBuf);
+int decode_message(uint32_t tag, const UsefulBufC encoded_buf, UsefulBuf *message_buf);
 
 /*
- * TransceiveMessage() - CBOR-encode a request, send it to TME, then CBOR-decode
+ * transceive_message() - CBOR-encode a request, send it to TME, then CBOR-decode
  * the response.  Uses a fixed timeout of TMECOM_RESPONSE_TIMEOUT_MS.
  *
- * A transport-layer failure (tmecomClientSendMessageSync returns non-zero) is
+ * A transport-layer failure (tmecom_client_send_message_sync returns non-zero) is
  * treated as fatal and calls tzbsp_err_fatal().
  *
  * @param [in]     tag          CBOR tag identifying the TME operation.
- * @param [in]     reqBuf       Pointer to the raw (pre-CBOR) request struct.
- * @param [in]     reqBufLen    Size of the request struct in bytes.
- * @param [out]    respBuf      Pointer to the buffer for the decoded response.
- * @param [in]     respBufLen   Size of respBuf in bytes.
- * @param [out]    respLen      Number of decoded response bytes written.
+ * @param [in]     req_buf       Pointer to the raw (pre-CBOR) request struct.
+ * @param [in]     req_buf_len    Size of the request struct in bytes.
+ * @param [out]    resp_buf      Pointer to the buffer for the decoded response.
+ * @param [in]     resp_buf_len   Size of resp_buf in bytes.
+ * @param [out]    resp_len      Number of decoded response bytes written.
  *
  * @return E_SUCCESS on success, error code otherwise.
  */
-int TransceiveMessage(uint32_t tag,
-                      void    *reqBuf,
-                      size_t   reqBufLen,
-                      void    *respBuf,
-                      size_t   respBufLen,
-                      size_t  *respLen);
+int transceive_message(uint32_t tag,
+		void    *req_buf,
+		size_t   req_buf_len,
+		void    *resp_buf,
+		size_t   resp_buf_len,
+		size_t  *resp_len);
 
 /**
- * Copy extended error information from @c result into @c errorInfo and
+ * Copy extended error information from @c result into @c error_info and
  * return whether any error field is non-zero.
  *
- * @param [out] errorInfo  Destination for the error information (must not be NULL).
+ * @param [out] error_info  Destination for the error information (must not be NULL).
  * @param [in]  result     Source error information to copy.
  *
  * @return @c E_SUCCESS if all error fields are zero, @c E_FAILURE otherwise.
- *         Returns @c E_INVALID_ARG if @c errorInfo is NULL.
+ *         Returns @c E_INVALID_ARG if @c error_info is NULL.
  */
-uint32_t UpdatedExtendedErrorInfo(TmeExtendedErrorInfo *errorInfo,
-                                  TmeExtendedErrorInfo  result);
+uint32_t update_extended_error_info(TmeExtendedErrorInfo *error_info,
+		TmeExtendedErrorInfo  result);
 
 #endif /* TME_MESSAGE_H_INCLUDED */

@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 /*
@@ -18,25 +18,29 @@
 #include "TmeMessagesTags.h"
 #include "tmecom_interfaces.h"
 
-int TmeSetXpuDbgar(uint32_t *dbgars, size_t count)
+int tme_set_xpu_dbgar(uint32_t *dbgars, size_t count)
 {
-  int                 ret         = E_FAILURE;
-  tmeSetXpuDbgarRsp_t rsp         = {0};
-  size_t              responseLen = sizeof(rsp);
+	int                 ret         = E_FAILURE;
+	tmeSetXpuDbgarRsp_t rsp         = {0};
+	size_t              response_len = sizeof(rsp);
 
-  CHECK_BAIL((dbgars != NULL) && (count > 0U));
+	CHECK_BAIL((dbgars != NULL) && (count > 0U));
 
-  CHECK_BAIL(E_SUCCESS == TransceiveMessage(TME_MSG_CBOR_TAG_SET_XPU_DBG_AR,
-                                            dbgars,
-                                            count * sizeof(*dbgars),
-                                            &rsp,
-                                            sizeof(rsp),
-                                            &responseLen));
+	if (count > (get_max_request_payload() / sizeof(*dbgars))) {
+		return E_DATA_TOO_LARGE;
+	}
 
-  CHECK_BAIL(responseLen == sizeof(rsp));
+	CHECK_BAIL(E_SUCCESS == transceive_message(TME_MSG_CBOR_TAG_SET_XPU_DBG_AR,
+		dbgars,
+		count * sizeof(*dbgars),
+		&rsp,
+		sizeof(rsp),
+		&response_len));
 
-  ret = (E_SUCCESS == rsp.status) ? E_SUCCESS : E_FAILURE;
+	CHECK_BAIL(response_len == sizeof(rsp));
+
+	ret = (E_SUCCESS == rsp.status) ? E_SUCCESS : E_FAILURE;
 
 bail:
-  return ret;
+	return ret;
 }

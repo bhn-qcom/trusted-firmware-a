@@ -13,7 +13,7 @@
  *
  *     [ struct tmecom_msg_hdr (8 bytes) | payload ]
  *
- * The CRC is computed by tmeCalculateCRC16() (CRC-16/X-25: reflected poly
+ * The CRC is computed by tme_calculate_crc16() (CRC-16/X-25: reflected poly
  * 0x8408, init 0xFFFF, final XOR 0xFFFF) over the PAYLOAD ONLY - the header
  * itself is not covered.  That helper is the protocol's own definition; do not
  * substitute a local CRC-16 variant and do not widen the range to include the
@@ -86,7 +86,7 @@ static size_t tmecom_build_msg(const void *payload, size_t payload_size,
 	hdr.version = (uint16_t)TMECOM_WIRE_VERSION;
 	hdr.txn_id  = txn_id;
 	/* CRC covers the payload only - see the file header comment. */
-	hdr.crc     = tmeCalculateCRC16(payload, payload_size);
+	hdr.crc     = tme_calculate_crc16(payload, payload_size);
 
 	(void)memcpy(g_send_buf, &hdr, TMECOM_MSG_HDR_SIZE);
 	(void)memcpy(g_send_buf + TMECOM_MSG_HDR_SIZE, payload, payload_size);
@@ -121,7 +121,7 @@ static int tmecom_validate_response(size_t msg_size, uint32_t expected_txn_id)
 		      hdr.txn_id, expected_txn_id);
 		return -EBADMSG;
 	}
-	if (!tmeDoesCRC16Match(hdr.crc, g_recv_buf + TMECOM_MSG_HDR_SIZE,
+	if (!tme_does_crc16_match(hdr.crc, g_recv_buf + TMECOM_MSG_HDR_SIZE,
 			       msg_size - TMECOM_MSG_HDR_SIZE)) {
 		ERROR("tmecom_recv: CRC mismatch hdr.crc:0x%04X\n", hdr.crc);
 		return -EBADMSG;

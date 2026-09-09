@@ -7,9 +7,9 @@
 */
 
 /*===========================================================================
-   Copyright (c) by Qualcomm Technologies, Inc. and/or its subsidiaries.
-   All Rights Reserved.
-   Confidential and Proprietary - Qualcomm Technologies, Inc.
+	 Copyright (c) by Qualcomm Technologies, Inc. and/or its subsidiaries.
+	 All Rights Reserved.
+	 Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #include <stdint.h>
@@ -105,7 +105,7 @@
  * Function Declarations and Documentation
  * -------------------------------------------------------------------------*/
 
- // NEEDSWORK wrapper for fatal error, to be cleaned up with when libaccesscontrol_static.a is updated/removed
+ /* NEEDSWORK wrapper for fatal error, to be cleaned up with when libaccesscontrol_static.a is updated/removed */
 int int_register_isr(uint32_t intnum, const char *int_desc, void *(*fn)(void *),
 		     void *ctx, uint32_t flags, bool enable);
 
@@ -143,7 +143,7 @@ int int_register_non_fatal_isr(uint32_t intnum, const char *intdesc, void *(*fn)
  * @return Zero on success, error code otherwise.
  */
 int int_register_fatal_isr(uint32_t intnum, const char *intdesc,
-        void *(*fn)(void *), void *ctx, uint32_t flags, bool enable);
+				void *(*fn)(void *), void *ctx, uint32_t flags, bool enable);
 
 /**
  * Uninstalls an ISR function. If no installed ISR is found for the interrupt

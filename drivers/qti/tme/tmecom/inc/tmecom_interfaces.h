@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #ifndef TMECOM_INTERFACES_H_INCLUDED
@@ -9,14 +9,14 @@
 
 #include <stdint.h>
 
-// clang-format off
+/* clang-format off */
 
 #define CHECK_BAIL(is_valid)            \
-  do {                                  \
-    if (!(is_valid)) {                  \
-       goto bail;                       \
-    };                                  \
-  } while(0)
+	do {                                  \
+		if (!(is_valid)) {                  \
+			 goto bail;                       \
+		};                                  \
+	} while(0)
 
 #define TMECOM_CONNECTION_TIMEOUT_MS  100
 
@@ -28,7 +28,7 @@
 #define TMECOM_RESPONSE_TIMEOUT_S      10
 #define TMECOM_RESPONSE_TIMEOUT_MS    (TMECOM_RESPONSE_TIMEOUT_S * 1000)
 
-// clang-format on
+/* clang-format on */
 
 #ifndef TMECOMCLIENT_TYPEDEF_DEFINED
 #define TMECOMCLIENT_TYPEDEF_DEFINED
@@ -36,26 +36,26 @@ typedef struct tmecomClient tmecomClient; /* Forward declaration */
 #endif
 
 /**
-  * Initialize tmecom client interface.
-  *
-  * @param [out] clientPtr  Pointer to a pointer to a unique opaque handle returned
-  *                         by the client registration process that must be used
-  *                         in later calls to the tmecom interface.
-  *
-  * @return @c 0 if successfully handled, error code otherwise
-  */
-int  tmecomInterfaceInit(tmecomClient **clientPtr);
+	* Initialize tmecom client interface.
+	*
+	* @param [out] client_ptr  Pointer to a pointer to a unique opaque handle returned
+	*                         by the client registration process that must be used
+	*                         in later calls to the tmecom interface.
+	*
+	* @return @c 0 if successfully handled, error code otherwise
+	*/
+int  tmecom_interface_init(tmecomClient **client_ptr);
 
 /**
-  * Un-initialize tmecom client interface.
-  */
-void tmecomInterfaceDeInit(void);
+	* Un-initialize tmecom client interface.
+	*/
+void tmecom_interface_deinit(void);
 
 /**
-  * Register the TME->TFA interrupt as an error fatal notification.
-  *
-  * @return @c 0 if successfully registered, error code otherwise
-  */
-int  tmecomRegisterErrFatalInterrupt(void);
+	* Register the TME->TFA interrupt as an error fatal notification.
+	*
+	* @return @c 0 if successfully registered, error code otherwise
+	*/
+int  tmecom_register_err_fatal_interrupt(void);
 
 #endif /* TMECOM_INTERFACES_H_INCLUDED */

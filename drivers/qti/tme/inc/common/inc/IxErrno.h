@@ -2,41 +2,41 @@
 #define IXERRNO_H
 /*===========================================================================
 
-               E R R O R   N U M B E R   D E F I N I T I O N S
+		 E R R O R   N U M B E R   D E F I N I T I O N S
 
 DESCRIPTION
-  This contains the definition of the return codes (error numbers).
-  Functions using this definition either return an error code, or set
-  a global variable to the appropriate value.
- 
+	This contains the definition of the return codes (error numbers).
+	Functions using this definition either return an error code, or set
+	a global variable to the appropriate value.
+
 
 Copyright (c) 2000-2009 by Qualcomm Technologies, Incorporated.  All Rights Reserved.
 ===========================================================================*/
 
 /*===========================================================================
 
-                      EDIT HISTORY FOR FILE
+		EDIT HISTORY FOR FILE
 
 
 when       who     what, where, why
 --------   ---     ----------------------------------------------------------
-10/28/09   chm     Add support for more informational return values from 
-                   WMDRM.
+10/28/09   chm     Add support for more informational return values from
+		 WMDRM.
 02/20/06   ssm     Deleted IxErrno in Interfaces dir and copied to services
-                   folder
+		 folder
 01/03/06   ssm     Cloned from errno.h
 
 ===========================================================================*/
 
 /*===========================================================================
 
-                     INCLUDE FILES FOR MODULE
+		 INCLUDE FILES FOR MODULE
 
 ===========================================================================*/
 
 /*===========================================================================
 
-              DEFINITIONS AND CONSTANTS FOR ERROR CODES
+		DEFINITIONS AND CONSTANTS FOR ERROR CODES
 
 ===========================================================================*/
 
@@ -151,7 +151,7 @@ typedef enum {
 	E_FLOW_NOT_IN_ZONE = 112, /* The flow is not in the specified zone */
 	E_ZONE_NOT_IN_DB = 113, /* The specified zone is not in database */
 	E_BUF_OVERFLOW = 114, /* The output buffer is too small        */
-	//E_EOF              = 115,   /* End of file is reached                */
+		/* E_EOF = 115, End of file is reached. */
 	E_DB_OVERFLOW = 116, /* The db is full, no further updates    */
 	E_DB_NO_OVERWRITE = 117, /* value exists and overwrite is false   */
 	E_NOT_FOUND = 118, /* Data not found                        */

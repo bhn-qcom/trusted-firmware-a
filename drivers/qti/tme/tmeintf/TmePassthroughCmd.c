@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #include <stddef.h>
@@ -13,36 +13,33 @@
 #include "tmecomTFA.h"
 #include "IxErrno.h"
 
-int TmePassthroughCmd(void *reqBuf, size_t reqSize, uint32_t *handle)
+int tme_passthrough_cmd(void *req_buf, size_t req_size, uint32_t *handle)
 {
-  tmecomClient *clientPtr = NULL;
-  int           ret       = E_INVALID_ARG;
+	tmecomClient *client_ptr = NULL;
+	int           ret       = E_INVALID_ARG;
 
-  CHECK_BAIL(reqBuf);
-  CHECK_BAIL(reqSize > 0U && reqSize <= TMECOM_MAX_REQUEST_SIZE);
-  CHECK_BAIL(handle);
+	CHECK_BAIL(req_buf);
+	CHECK_BAIL(req_size > 0U && req_size <= TMECOM_MAX_REQUEST_SIZE);
+	CHECK_BAIL(handle);
 
-  ret = tmecomInterfaceInit(&clientPtr);
-  if (ret != E_SUCCESS || clientPtr == NULL)
-  {
-    return E_FAILURE;
-  }
+	ret = tmecom_interface_init(&client_ptr);
+	if (ret != E_SUCCESS || client_ptr == NULL) {
+		return E_FAILURE;
+	}
 
-  ret = tmecomClientSendMessageAsync(clientPtr,
-                                     (void *)reqBuf,
-                                     reqSize,
-                                     handle);
-  if (ret == 0)
-  {
-    return E_SUCCESS;
-  }
-  else if (ret == -E_AGAIN)
-  {
-    return E_AGAIN;
-  }
+	ret = tmecom_client_send_message_async(client_ptr,
+		 (void *)req_buf,
+		 req_size,
+		 handle);
+	if (ret == 0) {
+		return E_SUCCESS;
+	}
+	else if (ret == -E_AGAIN) {
+		return E_AGAIN;
+	}
 
-  return E_FAILURE;
+	return E_FAILURE;
 
 bail:
-  return ret;
+	return ret;
 }

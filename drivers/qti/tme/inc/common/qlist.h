@@ -33,205 +33,205 @@ extern "C" {
 
 typedef struct QNode QNode;
 struct QNode {
-   QNode *pNext;
-   QNode *pPrev;
+	 QNode *pNext;
+	 QNode *pPrev;
 };
 
 #define QLIST_DEFINE_INIT(f) QList f = { { &f.n, &f.n } }
 
 typedef struct QList QList;
 struct QList {
-   QNode n;
+	 QNode n;
 };
 
 
 static inline void QNode_insPrev(QNode *me, QNode *pn)
 {
-   QNode *pPrev = me->pPrev;
+	 QNode *pPrev = me->pPrev;
 
-   pn->pNext    = me;
-   pn->pPrev    = pPrev;
-   pPrev->pNext = pn;
-   me->pPrev    = pn;
+	 pn->pNext    = me;
+	 pn->pPrev    = pPrev;
+	 pPrev->pNext = pn;
+	 me->pPrev    = pn;
 }
 
 
 static inline void QNode_insNext(QNode *me, QNode *pn)
 {
-   QNode *pNext = me->pNext;
+	 QNode *pNext = me->pNext;
 
-   pn->pPrev    = me;
-   pn->pNext    = pNext;
-   pNext->pPrev = pn;
-   me->pNext    = pn;
+	 pn->pPrev    = me;
+	 pn->pNext    = pNext;
+	 pNext->pPrev = pn;
+	 me->pNext    = pn;
 }
 
 
 
 static inline void QNode_dequeue(QNode *me)
 {
-   QNode *pNext = me->pNext;
-   QNode *pPrev = me->pPrev;
+	 QNode *pNext = me->pNext;
+	 QNode *pPrev = me->pPrev;
 
-   pPrev->pNext = pNext;
-   pNext->pPrev = pPrev;
-   me->pNext = 0;
-   me->pPrev = 0;
+	 pPrev->pNext = pNext;
+	 pNext->pPrev = pPrev;
+	 me->pNext = 0;
+	 me->pPrev = 0;
 }
 
 
 static inline void QNode_construct(QNode *me)
 {
-   me->pNext = me->pPrev = 0;
+	 me->pNext = me->pPrev = 0;
 }
 
 
 static inline bool QNode_isQueued(QNode const *me)
 {
-   return (0 != me->pNext);
+	 return (0 != me->pNext);
 }
 
 
 static inline void QNode_dequeueIf(QNode *me)
 {
-   if (QNode_isQueued(me)) {
-      QNode_dequeue(me);
-   }
+	 if (QNode_isQueued(me)) {
+			QNode_dequeue(me);
+	 }
 }
 
 
-//--------------------------------------------------------------------
-//--  QList functions  ----------------------------------------------
-//--------------------------------------------------------------------
+/*-------------------------------------------------------------------- */
+/*--  QList functions  ---------------------------------------------- */
+/*-------------------------------------------------------------------- */
 
 
 static inline void QList_construct(QList *me)
 {
-   me->n.pNext = me->n.pPrev = &me->n;
+	 me->n.pNext = me->n.pPrev = &me->n;
 }
 
 
 static inline bool QList_isEmpty(QList const *me)
 {
-   return me->n.pNext == &me->n;
+	 return me->n.pNext == &me->n;
 }
 
 
 static inline void QList_appendNode(QList *me, QNode *pn)
 {
-   QNode_insPrev(&me->n, pn);
+	 QNode_insPrev(&me->n, pn);
 }
 
 
 static inline void QList_prependNode(QList *me, QNode *pn)
 {
-   QNode_insNext(&me->n, pn);
+	 QNode_insNext(&me->n, pn);
 }
 
 
 static inline void QList_constructFrom(QList *me, QList *psrc)
 {
-   QNode *s = &psrc->n;
-   QNode *d = &me->n;
+	 QNode *s = &psrc->n;
+	 QNode *d = &me->n;
 
-   s->pNext->pPrev = d;
-   d->pPrev        = s->pPrev;
-   d->pNext        = s->pNext;
-   s->pPrev->pNext = d;
+	 s->pNext->pPrev = d;
+	 d->pPrev        = s->pPrev;
+	 d->pNext        = s->pNext;
+	 s->pPrev->pNext = d;
 
-   QList_construct(psrc);
+	 QList_construct(psrc);
 }
 
 static inline void QList_appendList(QList *me, QList *psrc)
 {
-   QNode *s = &psrc->n;
-   QNode *d = &me->n;
-   QNode *dp = d->pPrev;
-   QNode *sn = s->pNext;
-   QNode *sp;
+	 QNode *s = &psrc->n;
+	 QNode *d = &me->n;
+	 QNode *dp = d->pPrev;
+	 QNode *sn = s->pNext;
+	 QNode *sp;
 
-   sn->pPrev   = dp;
-   dp->pNext   = sn;
-   d->pPrev    = (sp = s->pPrev);
-   sp->pNext   = d;
+	 sn->pPrev   = dp;
+	 dp->pNext   = sn;
+	 d->pPrev    = (sp = s->pPrev);
+	 sp->pNext   = d;
 
-   QList_construct(psrc);
+	 QList_construct(psrc);
 }
 
 
 #define QLIST_FOR_ALL(pList, pNode) \
-   for ((pNode) = (pList)->n.pNext; \
-        (pNode) != &(pList)->n; \
-        (pNode) = (pNode)->pNext)
+	 for ((pNode) = (pList)->n.pNext; \
+				(pNode) != &(pList)->n; \
+				(pNode) = (pNode)->pNext)
 
 #define QLIST_FOR_REST(pList, pNode) \
-   for (; \
-        (pNode) != &(pList)->n; \
-        (pNode) = (pNode)->pNext)
+	 for (; \
+				(pNode) != &(pList)->n; \
+				(pNode) = (pNode)->pNext)
 
 #define QLIST_REV_FOR_ALL(pList, pNode) \
-   for ((pNode) = (pList)->n.pPrev; \
-        (pNode) != &(pList)->n; \
-        (pNode) = (pNode)->pPrev)
+	 for ((pNode) = (pList)->n.pPrev; \
+				(pNode) != &(pList)->n; \
+				(pNode) = (pNode)->pPrev)
 
 #define QLIST_REV_FOR_REST(pList, pNode) \
-   for (; \
-        (pNode) != &(pList)->n; \
-        (pNode) = (pNode)->pPrev)
+	 for (; \
+				(pNode) != &(pList)->n; \
+				(pNode) = (pNode)->pPrev)
 
 /* Allows dequeing QNodes during iteration */
 #define QLIST_NEXTSAFE_FOR_ALL(pList, pNode, pNodeNext) \
-    for ((pNode) = (pList)->n.pNext, (pNodeNext) = (pNode)->pNext; \
-         (pNode) != &(pList)->n; \
-         (pNode) = (pNodeNext), (pNodeNext) = (pNode)->pNext)
+		for ((pNode) = (pList)->n.pNext, (pNodeNext) = (pNode)->pNext; \
+				 (pNode) != &(pList)->n; \
+				 (pNode) = (pNodeNext), (pNodeNext) = (pNode)->pNext)
 
 
 static inline QNode *QList_getFirst(QList *me)
 {
-   QNode *pn = me->n.pNext;
+	 QNode *pn = me->n.pNext;
 
-   return (pn == &me->n ? 0 : pn);
+	 return (pn == &me->n ? 0 : pn);
 }
 
 
 static inline QNode *QList_getLast(QList *me)
 {
-   QNode *pn = me->n.pPrev;
+	 QNode *pn = me->n.pPrev;
 
-   return (pn == &me->n ? 0 : pn);
+	 return (pn == &me->n ? 0 : pn);
 }
 
 
 static inline QNode *QList_pop(QList *me)
 {
-   QNode *pn = me->n.pNext;
-   QNode *pnn = pn->pNext;
+	 QNode *pn = me->n.pNext;
+	 QNode *pnn = pn->pNext;
 
-   if (pn == &me->n) {
-      return 0;
-   }
+	 if (pn == &me->n) {
+			return 0;
+	 }
 
-   me->n.pNext = pnn;
-   pnn->pPrev   = &me->n;
-   QNode_construct(pn);
-   return pn;
+	 me->n.pNext = pnn;
+	 pnn->pPrev   = &me->n;
+	 QNode_construct(pn);
+	 return pn;
 }
 
 
 static inline QNode *QList_popLast(QList *me)
 {
-   QNode *pp = me->n.pPrev;
-   QNode *ppp = pp->pPrev;
+	 QNode *pp = me->n.pPrev;
+	 QNode *ppp = pp->pPrev;
 
-   if (pp == &me->n) {
-      return 0;
-   }
+	 if (pp == &me->n) {
+			return 0;
+	 }
 
-   me->n.pPrev = ppp;
-   ppp->pNext  = &me->n;
-   QNode_construct(pp);
+	 me->n.pPrev = ppp;
+	 ppp->pNext  = &me->n;
+	 QNode_construct(pp);
 
-   return pp;
+	 return pp;
 }
 
 #ifdef __cplusplus

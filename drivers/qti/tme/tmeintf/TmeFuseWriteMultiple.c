@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 /*
@@ -29,7 +29,7 @@
  * request at a time, so at most one fuse-write request is ever in flight.
  *
  * Error codes are returned as positive IxErrno E_* values, matching the rest
- * of this tree (TmeFuseRead.c, TmeMessage.c).
+ * of this tree (tme_fuse_read.c, TmeMessage.c).
  */
 
 #include <stddef.h>
@@ -46,76 +46,70 @@
  * Request scratch.  Static rather than automatic - see the note in the file
  * header about the struct size and the absence of a heap in TF-A.
  */
-static tmeFuseWriteMultipleReq_t s_fuseWriteReq;
+static tmeFuseWriteMultipleReq_t s_fuse_write_req;
 
-int TmeFuseWriteMultiple(TMEFuse_t      *fuseArray,
-                         size_t          fuseArrayLen,
-                         uint32_t *const qfpromApiStatus)
+int tme_fuse_write_multiple(TMEFuse_t      *fuse_array,
+		 size_t          fuse_array_len,
+		 uint32_t *const qfprom_api_status)
 {
-  int                       ret         = E_FAILURE;
-  tmeFuseWriteMultipleRsp_t rsp         = {0};
-  size_t                    responseLen = sizeof(rsp);
-  size_t                    i;
+	int                       ret         = E_FAILURE;
+	tmeFuseWriteMultipleRsp_t rsp         = {0};
+	size_t                    response_len = sizeof(rsp);
+	size_t                    i;
 
-  if ((fuseArray == NULL) || (qfpromApiStatus == NULL))
-  {
-    return E_BAD_ADDRESS;
-  }
+	if ((fuse_array == NULL) || (qfprom_api_status == NULL)) {
+		return E_BAD_ADDRESS;
+	}
 
-  if (fuseArrayLen == 0U)
-  {
-    return E_NO_DATA;
-  }
+	if (fuse_array_len == 0U) {
+		return E_NO_DATA;
+	}
 
-  if (fuseArrayLen > TME_MAX_FUSE_WRITE_REQ)
-  {
-    return E_DATA_TOO_LARGE;
-  }
+	if (fuse_array_len > TME_MAX_FUSE_WRITE_REQ) {
+		return E_DATA_TOO_LARGE;
+	}
 
-  *qfpromApiStatus = TME_QFPROM_STATUS_UNSET;
+	*qfprom_api_status = TME_QFPROM_STATUS_UNSET;
 
-  /*
-   * The scratch buffer is reused across calls and the whole fixed-size struct
-   * goes on the wire, so clear it first: without this, row addresses left in
-   * the unused tail by an earlier request would be re-presented to TME FW.
-   * TME FW only honours the first fuseArrayLen entries, but do not rely on
-   * that to keep stale addresses harmless.
-   */
-  memset(&s_fuseWriteReq, 0, sizeof(s_fuseWriteReq));
+	/*
+	 * The scratch buffer is reused across calls and the whole fixed-size struct
+	 * goes on the wire, so clear it first: without this, row addresses left in
+	 * the unused tail by an earlier request would be re-presented to TME FW.
+	 * TME FW only honours the first fuse_array_len entries, but do not rely on
+	 * that to keep stale addresses harmless.
+	 */
+	memset(&s_fuse_write_req, 0, sizeof(s_fuse_write_req));
 
-  s_fuseWriteReq.fuseArrayLen = (uint32_t)fuseArrayLen;
+	s_fuse_write_req.fuse_array_len = (uint32_t)fuse_array_len;
 
-  for (i = 0U; i < fuseArrayLen; i++)
-  {
-    s_fuseWriteReq.fuseArray[i].addr    = fuseArray[i].addr;
-    s_fuseWriteReq.fuseArray[i].data[0] = fuseArray[i].data[0];
-    s_fuseWriteReq.fuseArray[i].data[1] = fuseArray[i].data[1];
-  }
+	for (i = 0U; i < fuse_array_len; i++) {
+		s_fuse_write_req.fuse_array[i].addr    = fuse_array[i].addr;
+		s_fuse_write_req.fuse_array[i].data[0] = fuse_array[i].data[0];
+		s_fuse_write_req.fuse_array[i].data[1] = fuse_array[i].data[1];
+	}
 
-  ret = TransceiveMessage(TME_MSG_CBOR_TAG_FUSE_WRITE_MULTIPLE,
-                          &s_fuseWriteReq,
-                          sizeof(s_fuseWriteReq),
-                          &rsp,
-                          sizeof(rsp),
-                          &responseLen);
+	ret = transceive_message(TME_MSG_CBOR_TAG_FUSE_WRITE_MULTIPLE,
+		&s_fuse_write_req,
+		sizeof(s_fuse_write_req),
+		&rsp,
+		sizeof(rsp),
+		&response_len);
 
-  if (ret != E_SUCCESS)
-  {
-    return ret;
-  }
+	if (ret != E_SUCCESS) {
+		return ret;
+	}
 
-  if (responseLen != sizeof(rsp))
-  {
-    return E_FAILURE;
-  }
+	if (response_len != sizeof(rsp)) {
+		return E_FAILURE;
+	}
 
-  /*
-   * The caller's qfpromApiStatus receives rsp.status (TME's handler status),
-   * not rsp.addrErr.  rsp.addrErr carries the qfprom driver's address/error
-   * detail and is dropped here - surface it through a wider signature if it
-   * is ever needed for diagnostics.
-   */
-  *qfpromApiStatus = rsp.status;
+	/*
+	 * The caller's qfprom_api_status receives rsp.status (TME's handler status),
+	 * not rsp.addr_err.  rsp.addr_err carries the qfprom driver's address/error
+	 * detail and is dropped here - surface it through a wider signature if it
+	 * is ever needed for diagnostics.
+	 */
+	*qfprom_api_status = rsp.status;
 
-  return (rsp.status == TME_QFPROM_NO_ERR) ? E_SUCCESS : E_FAILURE;
+	return (rsp.status == TME_QFPROM_NO_ERR) ? E_SUCCESS : E_FAILURE;
 }

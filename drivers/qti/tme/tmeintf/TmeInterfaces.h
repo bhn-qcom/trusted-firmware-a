@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #ifndef TME_INTERFACES_H_INCLUDED
@@ -15,97 +15,77 @@
 #include "TmeInterfacesDefs.h"
 
 /*
- * TmeForwardRequest() - forward a pre-encoded (CBOR/QBOR) request to
+ * tme_forward_request() - forward a pre-encoded (CBOR/QBOR) request to
  * TME and return the raw response.
  *
  * The request buffer is forwarded as-is; no serialisation is performed here.
  * A hard-coded communication timeout is applied internally — callers do not
  * supply or influence the timeout value.
  *
- * @param [in]  reqBuf       Pointer to the pre-encoded request buffer.
- * @param [in]  reqSize      Size of the request buffer in bytes.
- * @param [out] rspBuf       Pointer to the response buffer.
- * @param [in]  rspBufSize   Size of the response buffer in bytes.
+ * @param [in]  req_buf       Pointer to the pre-encoded request buffer.
+ * @param [in]  req_size      Size of the request buffer in bytes.
+ * @param [out] rsp_buf       Pointer to the response buffer.
+ * @param [in]  rsp_buf_size   Size of the response buffer in bytes.
  *
  * @return E_SUCCESS on success, error code otherwise.
  */
-int TmeForwardRequest(void *reqBuf,
-                      size_t      reqSize,
-                      void       *rspBuf,
-                      size_t     *rspBufSize);
+int tme_forward_request(void *req_buf,
+		size_t      req_size,
+		void       *rsp_buf,
+		size_t     *rsp_buf_size);
 
 /*
- * TmePassthroughCmd() - asynchronously forward a pre-encoded (CBOR/QBOR)
+ * tme_passthrough_cmd() - asynchronously forward a pre-encoded (CBOR/QBOR)
  * request from to TME.
  *
  * Returns as soon as the request has been handed to the transport; does not
  * wait for TME to finish processing it. The TME CPU processes one request
  * at a time and does not support queuing, so only one request -- submitted
- * via this function or TmeForwardRequest() -- may be outstanding at a time.
+ * via this function or tme_forward_request() -- may be outstanding at a time.
  *
- * Use TmePassthroughAwait() with the returned handle to poll for the
+ * Use tme_passthrough_await() with the returned handle to poll for the
  * response.
  *
- * @param [in]  reqBuf    Pointer to the pre-encoded request buffer.
- * @param [in]  reqSize   Size of the request buffer in bytes.
+ * @param [in]  req_buf    Pointer to the pre-encoded request buffer.
+ * @param [in]  req_size   Size of the request buffer in bytes.
  * @param [out] handle    Opaque handle identifying this request, to be
- *                        passed to TmePassthroughAwait().
+ *                        passed to tme_passthrough_await().
  *
  * @return E_SUCCESS and *handle set if the request was submitted.
  *         E_AGAIN if TME is currently processing another request; the
  *         caller should retry later.
  *         Other error code on failure to submit the request.
  */
-int TmePassthroughCmd(void *reqBuf, size_t reqSize, uint32_t *handle);
+int tme_passthrough_cmd(void *req_buf, size_t req_size, uint32_t *handle);
 
 /*
- * TmePassthroughAwait() - poll, without blocking, for the response to a
- * request previously submitted via TmePassthroughCmd().
+ * tme_passthrough_await() - poll, without blocking, for the response to a
+ * request previously submitted via tme_passthrough_cmd().
  *
- * @param [in]     handle      Handle returned by TmePassthroughCmd().
- * @param [out]    rspBuf      Pointer to the response buffer.
- * @param [in/out] rspBufSize  On input: capacity of rspBuf in bytes.
+ * @param [in]     handle      Handle returned by tme_passthrough_cmd().
+ * @param [out]    rsp_buf      Pointer to the response buffer.
+ * @param [in/out] rsp_buf_size  On input: capacity of rsp_buf in bytes.
  *                             On output: actual response size in bytes.
  *
- * @return E_SUCCESS and response copied into rspBuf if TME has finished
+ * @return E_SUCCESS and response copied into rsp_buf if TME has finished
  *         processing the request.
  *         E_IN_PROGRESS if TME is still processing the request; call again
  *         later.
  *         Other error code if handle is invalid/stale.
  */
-int TmePassthroughAwait(uint32_t handle, void *rspBuf, size_t *rspBufSize);
+int tme_passthrough_await(uint32_t handle, void *rsp_buf, size_t *rsp_buf_size);
 
 /*
- * TmeSHADigest() - compute a SHA digest over a message via TME.
+ * tme_fuse_read() - read one QFPROM row via TME.
  *
- * @param [in]  inHashAlgorithm  Hash algorithm to use (TME_HA_SHA256/384/512).
- * @param [in]  inMsg            Pointer to the input message.
- * @param [in]  inMsgLen         Length of the input message in bytes.
- * @param [out] outDigest        Buffer to receive the computed digest.
- * @param [out] outDigestLen     On input: capacity of outDigest in bytes.
- *                               On output: actual digest length written.
- * @param [out] errorInfo        Extended error information from TME.
- *
- * @return 0 if successful, non-zero value otherwise.
- */
-int TmeSHADigest(TMEHashAlgID_t        inHashAlgorithm,
-                 const uint8_t        *inMsg,
-                 size_t                inMsgLen,
-                 uint8_t              *outDigest,
-                 size_t               *outDigestLen,
-                 TmeExtendedErrorInfo *errorInfo);
-
-/*
- * TmeFuseRead() - read one QFPROM row via TME.
- *
- * @param [in]  addrType         Fuse address space (TME_QFPROM_ADDR_SPACE_*).
- * @param [in]  fuseAddr         SoC address of the QFPROM row to read.
- * @param [out] fuseData         Receives the row contents, low word first.
+ * @param [in]  addr_type         Fuse address space (TME_QFPROM_ADDR_SPACE_*).
+ * @param [in]  fuse_addr         SoC address of the QFPROM row to read.
+ * @param [out] fuse_data         Receives the row contents, low word first.
  *                               Must point to space for at least
  *                               TME_QFPROM_FUSE_DATA_WORDS uint32_t values -
  *                               a QFPROM row is always read two words at a
  *                               time, regardless of the width of interest.
- * @param [out] qfpromApiStatus  Status reported by TME's qfprom driver;
+ * @param [out] qfprom_api_status  Status reported by TME's qfprom driver;
  *                               TME_QFPROM_NO_ERR on a clean read.  Written
  *                               only when the call returns E_SUCCESS.
  *
@@ -113,21 +93,21 @@ int TmeSHADigest(TMEHashAlgID_t        inHashAlgorithm,
  *         expected size, error code otherwise.
  *
  * NOTE: E_SUCCESS only means the request/response exchange itself succeeded.
- * The caller MUST also check @p qfpromApiStatus - TME reports a rejected or
+ * The caller MUST also check @p qfprom_api_status - TME reports a rejected or
  * failed fuse read there, not in the return value.
  */
-int TmeFuseRead(TmeQfpromAddrSpace_t addrType,
-                uint32_t             fuseAddr,
-                uint32_t *const      fuseData,
-                uint32_t *const      qfpromApiStatus);
+int tme_fuse_read(TmeQfpromAddrSpace_t addr_type,
+		uint32_t             fuse_addr,
+		uint32_t *const      fuse_data,
+		uint32_t *const      qfprom_api_status);
 
 /*
- * TmeFuseWriteMultiple() - blow up to TME_MAX_FUSE_WRITE_REQ QFPROM rows in a
+ * tme_fuse_write_multiple() - blow up to TME_MAX_FUSE_WRITE_REQ QFPROM rows in a
  * single request via TME.
  *
  * ###########################################################################
  * # DESTRUCTIVE AND IRREVERSIBLE.  QFPROM fuses are one-time-programmable:   #
- * # any bit set in fuseArray[].data[] is blown permanently on real silicon    #
+ * # any bit set in fuse_array[].data[] is blown permanently on real silicon    #
  * # and can never be cleared.  Blowing the wrong row can brick the part or    #
  * # lock it out of secure boot.                                              #
  * #                                                                         #
@@ -135,10 +115,10 @@ int TmeFuseRead(TmeQfpromAddrSpace_t addrType,
  * # exercising this path without altering chip state.                        #
  * ###########################################################################
  *
- * @param [in]  fuseArray        Rows to write.  Not modified.
- * @param [in]  fuseArrayLen     Number of entries in fuseArray; must be in
+ * @param [in]  fuse_array        Rows to write.  Not modified.
+ * @param [in]  fuse_array_len     Number of entries in fuse_array; must be in
  *                               1..TME_MAX_FUSE_WRITE_REQ.
- * @param [out] qfpromApiStatus  Status reported by TME for the write;
+ * @param [out] qfprom_api_status  Status reported by TME for the write;
  *                               TME_QFPROM_NO_ERR on success.  Always written
  *                               once the arguments validate - set to
  *                               TME_QFPROM_STATUS_UNSET before the exchange.
@@ -148,28 +128,28 @@ int TmeFuseRead(TmeQfpromAddrSpace_t addrType,
  *         E_BAD_ADDRESS / E_NO_DATA / E_DATA_TOO_LARGE on bad arguments,
  *         other error code on a failed exchange or a rejected write.
  *
- * NOTE: unlike TmeFuseRead(), a nonzero status is folded into the return value
+ * NOTE: unlike tme_fuse_read(), a nonzero status is folded into the return value
  * here, so E_SUCCESS does mean the write itself was accepted.
  */
-int TmeFuseWriteMultiple(TMEFuse_t      *fuseArray,
-                         size_t          fuseArrayLen,
-                         uint32_t *const qfpromApiStatus);
+int tme_fuse_write_multiple(TMEFuse_t      *fuse_array,
+		 size_t          fuse_array_len,
+		 uint32_t *const qfprom_api_status);
 
 /*
- * TmeWriteConfigRegister() - write a QFPROM configuration register via TME.
+ * tme_write_config_register() - write a QFPROM configuration register via TME.
  *
- * @param [in]  registerId  Register to write (QFPROM_BIST_CTRL,
+ * @param [in]  register_id  Register to write (QFPROM_BIST_CTRL,
  *                           QFPROM_WRITE_DISABLE_STICKY_BIT0/1).
  * @param [in]  value       Value to write into the register.
  *
  * @return E_SUCCESS if the exchange completed, the response was the expected
  *         size, AND TME reported a zero status.  Error code otherwise -
- *         including when TME rejects registerId itself.
+ *         including when TME rejects register_id itself.
  */
-int TmeWriteConfigRegister(tmeConfigRegisterId_e registerId, uint32_t value);
+int tme_write_config_register(tmeConfigRegisterId_e register_id, uint32_t value);
 
 /*
- * TmeSetXpuDbgar() - program a set of XPU DBGAR addresses via TME.
+ * tme_set_xpu_dbgar() - program a set of XPU DBGAR addresses via TME.
  *
  * @param [in] dbgars  Array of XPU DBGAR addresses.  Not modified.
  * @param [in] count   Number of entries in dbgars; must be nonzero.
@@ -177,77 +157,77 @@ int TmeWriteConfigRegister(tmeConfigRegisterId_e registerId, uint32_t value);
  * @return E_SUCCESS if the exchange completed, the response was the expected
  *         size, AND TME reported a zero status.  Error code otherwise.
  */
-int TmeSetXpuDbgar(uint32_t *dbgars, size_t count);
+int tme_set_xpu_dbgar(uint32_t *dbgars, size_t count);
 
 /*
- * TmeInvokeAC() - invoke an access-control (AC) module in TME.
+ * tme_invoke_ac() - invoke an access-control (AC) module in TME.
  *
- * AC modules write and interpret the content of inBuffer/outBuffer
+ * AC modules write and interpret the content of in_buffer/out_buffer
  * themselves; this call only moves the bytes to and from TME.
  *
- * @param [in]  requestId  Request id identifying the AC module in TME.
- * @param [in]  inBuffer   Data to send to TME.  Not modified.
- * @param [in]  inSize     Size of inBuffer in bytes.
- * @param [out] outBuffer  Receives data from TME.  Must not be NULL.
- * @param [in]  outSize    Capacity of outBuffer in bytes; must be nonzero.
+ * @param [in]  request_id  Request id identifying the AC module in TME.
+ * @param [in]  in_buffer   Data to send to TME.  Not modified.
+ * @param [in]  in_size     Size of in_buffer in bytes.
+ * @param [out] out_buffer  Receives data from TME.  Must not be NULL.
+ * @param [in]  out_size    Capacity of out_buffer in bytes; must be nonzero.
  *
  * @return E_SUCCESS if the exchange completed, TME reported a zero status,
- *         AND the response fit within outSize.  Error code otherwise -
- *         including E_INVALID_ARG for a NULL outBuffer or zero outSize.
+ *         AND the response fit within out_size.  Error code otherwise -
+ *         including E_INVALID_ARG for a NULL out_buffer or zero out_size.
  */
-int TmeInvokeAC(uint32_t requestId,
-               uint8_t *inBuffer,
-               size_t   inSize,
-               uint8_t *outBuffer,
-               size_t   outSize);
+int tme_invoke_ac(uint32_t request_id,
+		 uint8_t *in_buffer,
+		 size_t   in_size,
+		 uint8_t *out_buffer,
+		 size_t   out_size);
 
 /*
- * TmeGetSignedImageIds() - retrieve the software image IDs signed by a given
+ * tme_get_signed_image_ids() - retrieve the software image IDs signed by a given
  * signing authority.
  *
- * @param [in]  signingAuthority  CA whose signed image IDs to retrieve.
- * @param [out] outputSwIds       Receives the image IDs.
- * @param [in]  outputSwIdMax     Capacity of outputSwIds, in entries; must
+ * @param [in]  signing_authority  CA whose signed image IDs to retrieve.
+ * @param [out] output_sw_ids       Receives the image IDs.
+ * @param [in]  output_sw_id_max     Capacity of output_sw_ids, in entries; must
  *                                be nonzero.
- * @param [out] outputSwIdCount   Receives the number of entries written to
- *                                outputSwIds.
+ * @param [out] output_sw_id_count   Receives the number of entries written to
+ *                                output_sw_ids.
  *
  * @return E_SUCCESS if the exchange completed, the response was the expected
  *         size, AND TME reported a zero status.  E_DATA_TOO_LARGE if TME's
- *         list does not fit in outputSwIdMax.  E_INVALID_ARG for a NULL
- *         outputSwIds/outputSwIdCount or a zero outputSwIdMax.
+ *         list does not fit in output_sw_id_max.  E_INVALID_ARG for a NULL
+ *         output_sw_ids/output_sw_id_count or a zero output_sw_id_max.
  */
-int TmeGetSignedImageIds(tmeSoftwareRootCaIds signingAuthority,
-                        uint32_t            *outputSwIds,
-                        size_t               outputSwIdMax,
-                        size_t              *outputSwIdCount);
+int tme_get_signed_image_ids(tmeSoftwareRootCaIds signing_authority,
+		uint32_t            *output_sw_ids,
+		size_t               output_sw_id_max,
+		size_t              *output_sw_id_count);
 
 /*
- * TmeGetPilImageRegions() - retrieve the PIL (Peripheral Image Loader)
+ * tme_get_pil_image_regions() - retrieve the PIL (Peripheral Image Loader)
  * memory regions TME has recorded for a set of software IDs.
  *
- * @param [in]     swIdCount        Number of entries in swIds; must be
+ * @param [in]     sw_id_count        Number of entries in sw_ids; must be
  *                                  nonzero and at most TMECOM_PIL_IMAGES_MAX_SWIDS.
- * @param [in]     swIds            Software IDs to query.
- * @param [in,out] regionListCount  On input: capacity of regionList, in
+ * @param [in]     sw_ids            Software IDs to query.
+ * @param [in,out] region_list_count  On input: capacity of region_list, in
  *                                  entries; must be nonzero and at most
  *                                  TMECOM_PIL_IMAGES_MAX_REGIONS.  On output:
  *                                  number of entries TME reported.
- * @param [out]    regionList       Receives the regions TME reported.
+ * @param [out]    region_list       Receives the regions TME reported.
  *
  * @return E_SUCCESS if the exchange completed, the response was the expected
- *         size, AND TME reported a zero status.  E_OUT_OF_RANGE if swIdCount
- *         or the input regionListCount exceeds its maximum.  E_INVALID_ARG
- *         for a NULL pointer, a zero swIdCount/regionListCount, or an input
- *         regionListCount too small for what TME reported.
+ *         size, AND TME reported a zero status.  E_OUT_OF_RANGE if sw_id_count
+ *         or the input region_list_count exceeds its maximum.  E_INVALID_ARG
+ *         for a NULL pointer, a zero sw_id_count/region_list_count, or an input
+ *         region_list_count too small for what TME reported.
  */
-int TmeGetPilImageRegions(uint32_t       *const swIdCount,
-                         uint32_t       *const swIds,
-                         uint32_t       *const regionListCount,
-                         tmePilRegion_t *const regionList);
+int tme_get_pil_image_regions(uint32_t       *const sw_id_count,
+		 uint32_t       *const sw_ids,
+		 uint32_t       *const region_list_count,
+		 tmePilRegion_t *const region_list);
 
 /*
- * TmeUpdateRollbackVersion() - tell TME to commit the recorded image versions
+ * tme_update_rollback_version() - tell TME to commit the recorded image versions
  * into the antirollback (ARB) fuses.
  *
  * ###########################################################################
@@ -255,7 +235,7 @@ int TmeGetPilImageRegions(uint32_t       *const swIdCount,
  * # one-time-programmable: once TME has raised the stored ARB version for   #
  * # an image, that part will permanently refuse to boot any older-versioned #
  * # build of it.  There is no "undo" and no non-destructive dry run -       #
- * # unlike TmeFuseWriteMultiple(), there is no payload to zero out,         #
+ * # unlike tme_fuse_write_multiple(), there is no payload to zero out,         #
  * # because TME chooses the fuses itself from versions it recorded during   #
  * # authentication.                                                         #
  * #                                                                         #
@@ -275,6 +255,6 @@ int TmeGetPilImageRegions(uint32_t       *const swIdCount,
  * @return E_SUCCESS if the exchange completed, the response was the expected
  *         size, AND TME reported a zero status.  Error code otherwise.
  */
-int TmeUpdateRollbackVersion(void);
+int tme_update_rollback_version(void);
 
 #endif /* TME_INTERFACES_H_INCLUDED */

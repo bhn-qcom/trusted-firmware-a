@@ -2,24 +2,24 @@
 #define COM_DTYPES_H
 /*===========================================================================
 
-                   S T A N D A R D    D E C L A R A T I O N S
+		 S T A N D A R D    D E C L A R A T I O N S
 
 DESCRIPTION
-  This header file contains general data types that are of use to all modules.
-  The values or definitions are dependent on the specified
-  target.  T_WINNT specifies Windows NT based targets, otherwise the
-  default is for ARM targets.
+	This header file contains general data types that are of use to all modules.
+	The values or definitions are dependent on the specified
+	target.  T_WINNT specifies Windows NT based targets, otherwise the
+	default is for ARM targets.
 
-  T_WINNT  Software is hosted on an NT platforn, triggers macro and
-           type definitions, unlike definition above which triggers
-           actual OS calls
+	T_WINNT  Software is hosted on an NT platforn, triggers macro and
+		 type definitions, unlike definition above which triggers
+		 actual OS calls
 
 Copyright (c) 2009-2014, 2018 by Qualcomm Technologies, Inc.  All Rights Reserved.
 ===========================================================================*/
 
 /*===========================================================================
 
-                      EDIT HISTORY FOR FILE
+		EDIT HISTORY FOR FILE
 
 This section contains comments describing changes made to this file.
 Notice that changes are listed in reverse chronological order.
@@ -33,7 +33,7 @@ when       who     what, where, why
 
 /*===========================================================================
 
-                            Data Declarations
+		Data Declarations
 
 ===========================================================================*/
 
@@ -96,7 +96,7 @@ typedef uint32_t bool32;
 #endif
 #endif
 
-// TODO:
+/* TODO: */
 #if defined(DALSTDDEF_H) /* guards against a known re-definer */
 #define _BOOLEAN_DEFINED
 #define _UINT32_DEFINED
@@ -142,8 +142,8 @@ typedef int8_t int8; /* Signed 8  bit value */
 
 #ifndef _UINTNT_DEFINED
 typedef uintptr_t uintnt; /* Unsigned Native Integer
-                                            Aarch32: 32 bits
-                                            Aarch64: 64 bits        */
+		Aarch32: 32 bits
+		Aarch64: 64 bits        */
 #define _UINTNT_DEFINED
 #endif
 /* This group are the deprecated types.  Their use should be

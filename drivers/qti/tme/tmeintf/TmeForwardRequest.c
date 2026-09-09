@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #include <stddef.h>
@@ -13,33 +13,32 @@
 #include "tmecomTFA.h"
 #include "IxErrno.h"
 
-int TmeForwardRequest(void *reqBuf,
-                      size_t      reqSize,
-                      void       *rspBuf,
-                      size_t     *rspBufSize)
+int tme_forward_request(void *req_buf,
+		size_t      req_size,
+		void       *rsp_buf,
+		size_t     *rsp_buf_size)
 {
-  tmecomClient *clientPtr = NULL;
-  int           ret       = E_INVALID_ARG;
+	tmecomClient *client_ptr = NULL;
+	int           ret       = E_INVALID_ARG;
 
-  CHECK_BAIL(reqBuf);
-  CHECK_BAIL(reqSize > 0U && reqSize <= TMECOM_MAX_REQUEST_SIZE);
-  CHECK_BAIL(rspBuf);
-  CHECK_BAIL(*rspBufSize > 0U && *rspBufSize <= TMECOM_MAX_RESPONSE_SIZE);
+	CHECK_BAIL(req_buf);
+	CHECK_BAIL(req_size > 0U && req_size <= TMECOM_MAX_REQUEST_SIZE);
+	CHECK_BAIL(rsp_buf);
+	CHECK_BAIL(*rsp_buf_size > 0U && *rsp_buf_size <= TMECOM_MAX_RESPONSE_SIZE);
 
-  ret = tmecomInterfaceInit(&clientPtr);
-  if (ret != E_SUCCESS || clientPtr == NULL)
-  {
-    return E_FAILURE;
-  }
+	ret = tmecom_interface_init(&client_ptr);
+	if (ret != E_SUCCESS || client_ptr == NULL) {
+		return E_FAILURE;
+	}
 
-  ret = tmecomClientSendMessageSync(clientPtr,
-                                    (void *)reqBuf,
-                                    reqSize,
-                                    rspBuf,
-                                    rspBufSize,
-                                    TMECOM_RESPONSE_TIMEOUT_MS);
-  return (ret == 0) ? E_SUCCESS : E_FAILURE;
+	ret = tmecom_client_send_message_sync(client_ptr,
+		(void *)req_buf,
+		req_size,
+		rsp_buf,
+		rsp_buf_size,
+		TMECOM_RESPONSE_TIMEOUT_MS);
+	return (ret == 0) ? E_SUCCESS : E_FAILURE;
 
 bail:
-  return ret;
+	return ret;
 }

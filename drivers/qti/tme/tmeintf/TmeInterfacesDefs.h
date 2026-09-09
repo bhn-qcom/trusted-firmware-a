@@ -1,7 +1,7 @@
 /*===========================================================================
-  Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-  All rights reserved.
-  Confidential and Proprietary - Qualcomm Technologies, Inc.
+	Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+	All rights reserved.
+	Confidential and Proprietary - Qualcomm Technologies, Inc.
 ===========================================================================*/
 
 #ifndef TME_INTERFACES_DEFS_H_INCLUDED
@@ -12,16 +12,16 @@
 #include <stdint.h>
 
 #ifndef PACKED_STRUCT
-  #ifdef _MSC_VER
-    #define PACKED_STRUCT __pragma( pack(push, 1) ) struct __pragma( pack(pop) )
-  #elif defined(__ARMCC_VERSION)
-    #define PACKED_STRUCT struct __attribute__((packed))
-  #elif defined(__GNUC__)
-    #define PACKED_STRUCT struct __attribute__((packed))
-    #define __packed __attribute__((__packed__))
-  #else
-    #error Unknown compiler
-  #endif
+	#ifdef _MSC_VER
+		#define PACKED_STRUCT __pragma( pack(push, 1) ) struct __pragma( pack(pop) )
+	#elif defined(__ARMCC_VERSION)
+		#define PACKED_STRUCT struct __attribute__((packed))
+	#elif defined(__GNUC__)
+		#define PACKED_STRUCT struct __attribute__((packed))
+		#define __packed __attribute__((__packed__))
+	#else
+		#error Unknown compiler
+	#endif
 #endif
 
 /**
@@ -29,67 +29,21 @@
  */
 #if defined(FEATURE_64_BIT_HSDMA)
 typedef uint64_t TmeComAddr_t;
-#else   //  FEATURE_64_BIT_HSDMA
+#else   /*  FEATURE_64_BIT_HSDMA */
 typedef uint32_t TmeComAddr_t;
-#endif  //  FEATURE_64_BIT_HSDMA
-
-#ifndef TME_BITS_TO_BYTES
-  #define TME_BITS_TO_BYTES(bits) (((bits) + 7) >> 3)
-#endif
-
-#define TME_HA_SHA256_SIZE  TME_BITS_TO_BYTES(256) /**< Size of SHA-256 digest in bytes */
-#define TME_HA_SHA384_SIZE  TME_BITS_TO_BYTES(384) /**< Size of SHA-384 digest in bytes */
-#define TME_HA_SHA512_SIZE  TME_BITS_TO_BYTES(512) /**< Size of SHA-512 digest in bytes */
-
-
-/*--------------------------------------------------------------------------*
- *                                  Key ID                                  *
- *--------------------------------------------------------------------------*/
-typedef uint32_t TmeKID;
-
-/**
- * Hash algorithm IDs used for SHA digest and HMAC-SHA operations.
- */
-typedef enum
-{
-  TME_HA_INVALID = 0x00, /**< Hash Algorithm: INVALID */
-  TME_HA_SHA256  = 0x02, /**< Hash Algorithm: SHA256  */
-  TME_HA_SHA384  = 0x03, /**< Hash Algorithm: SHA384  */
-  TME_HA_SHA512  = 0x05  /**< Hash Algorithm: SHA512  */
-} TMEHashAlgID_t;
-
-/*
- * Request payload for TME_MSG_CBOR_TAG_SHA_DIGEST.
- */
-typedef PACKED_STRUCT
-{
-  uint32_t     algorithm; //<! SHA algorithm
-  TmeComAddr_t data;      //<! Input data address
-  uint32_t     dataSize;  //<! Input data size
-  uint32_t     keyID;     //<! Key identifier (applicable for HMAC-SHA)
-} tmeShaReq_t;
+#endif  /*  FEATURE_64_BIT_HSDMA */
 
 /*
  * Extended error information returned by TME for operations that use the
  * sequencer.
  */
 typedef struct {
-  uint32_t tmeErrorStatus;    /**< TME FW Response status. */
-  uint32_t seqErrorStatus;    /**< Contents of CSR_CMD_ERROR_STATUS */
-  uint32_t seqKPErrorStatus0; /**< CRYPTO_ENGINE_CRYPTO_KEY_POLICY_ERROR_STATUS0 */
-  uint32_t seqKPErrorStatus1; /**< CRYPTO_ENGINE_CRYPTO_KEY_POLICY_ERROR_STATUS1 */
-  uint32_t seqRspStatus;      /**< Contents of CSR_CMD_RESPONSE_STATUS */
+	uint32_t tme_error_status;    /**< TME FW Response status. */
+	uint32_t seq_error_status;    /**< Contents of CSR_CMD_ERROR_STATUS */
+	uint32_t seq_kp_error_status0; /**< CRYPTO_ENGINE_CRYPTO_KEY_POLICY_ERROR_STATUS0 */
+	uint32_t seq_kp_error_status1; /**< CRYPTO_ENGINE_CRYPTO_KEY_POLICY_ERROR_STATUS1 */
+	uint32_t seq_rsp_status;      /**< Contents of CSR_CMD_RESPONSE_STATUS */
 } TmeExtendedErrorInfo;
-
-/*
- * Response payload for TME_MSG_CBOR_TAG_SHA_DIGEST.
- */
-typedef PACKED_STRUCT
-{
-  TmeExtendedErrorInfo info;                       //<! Sequencer status information
-  uint8_t              output[TME_HA_SHA512_SIZE]; //<! Output digest
-  uint32_t             outputLen;                  //<! Output digest length in bytes
-} tmeShaRsp_t;
 
 /*--------------------------------------------------------------------------*
  *                               QFPROM fuses                                *
@@ -107,7 +61,7 @@ typedef uint32_t TmeQfpromAddrSpace_t;
 #define TME_QFPROM_ADDR_SPACE_CORR  0x1U /**< Corrected (ECC-applied) region */
 
 /*
- * qfpromApiStatus value seen when a row is read without error; 0 is the
+ * qfprom_api_status value seen when a row is read without error; 0 is the
  * value TME FW returns on a successful read.
  */
 #define TME_QFPROM_NO_ERR           0x0U
@@ -119,14 +73,14 @@ typedef uint32_t TmeQfpromAddrSpace_t;
  * Request payload for TME_MSG_CBOR_TAG_FUSE_READ.
  *
  * Field order is confirmed against TME FW: a request of
- * { addrType = TME_QFPROM_ADDR_SPACE_CORR, fuseAddr = <row> } is accepted and
- * answered with qfpromApiStatus == TME_QFPROM_NO_ERR.  Reversing the two would
+ * { addr_type = TME_QFPROM_ADDR_SPACE_CORR, fuse_addr = <row> } is accepted and
+ * answered with qfprom_api_status == TME_QFPROM_NO_ERR.  Reversing the two would
  * present an invalid address space and be rejected.
  */
 typedef PACKED_STRUCT
 {
-  uint32_t addrType; //<! TmeQfpromAddrSpace_t selecting the fuse address space
-  uint32_t fuseAddr; //<! SoC address of the QFPROM row to read
+	uint32_t addr_type; /* ! TmeQfpromAddrSpace_t selecting the fuse address space */
+	uint32_t fuse_addr; /* ! SoC address of the QFPROM row to read */
 } tmeFuseReadReq_t;
 
 /*
@@ -134,20 +88,20 @@ typedef PACKED_STRUCT
  *
  * Field order copied verbatim from TME FW's own TmeMessageTypes.h - status
  * FIRST, then the row data, then the qfprom driver status.  TME FW fills
- * .qfpromApiStatus from qfprom_read_row() and .status from its handler's
+ * .qfprom_api_status from qfprom_read_row() and .status from its handler's
  * return code (tme_handle_fuse_read.cpp).
  *
  * Do not reorder these to "read more naturally".  An earlier version of this
- * struct led with fuseData and put status last; it has the same 16-byte size,
+ * struct led with fuse_data and put status last; it has the same 16-byte size,
  * so the exchange still completed and the bring-up row (which reads back all
  * zeroes) still looked like a clean pass - while actually reporting
- * status/fuseData[0] as the row contents and fuseData[1] as the driver status.
+ * status/fuse_data[0] as the row contents and fuse_data[1] as the driver status.
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status;                               //<! TME handler status
-  uint32_t fuseData[TME_QFPROM_FUSE_DATA_WORDS]; //<! Row contents, low word first
-  uint32_t qfpromApiStatus;                      //<! qfprom driver status
+	uint32_t status;                               /* ! TME handler status */
+	uint32_t fuse_data[TME_QFPROM_FUSE_DATA_WORDS]; /* ! Row contents, low word first */
+	uint32_t qfprom_api_status;                      /* ! qfprom driver status */
 } tmeFuseReadRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -162,7 +116,7 @@ typedef PACKED_STRUCT
 #define TME_MAX_FUSE_WRITE_REQ      64U
 
 /*
- * Placeholder written to the caller's qfpromApiStatus before the exchange, so
+ * Placeholder written to the caller's qfprom_api_status before the exchange, so
  * a caller that ignores the return value never sees a stale or uninitialised
  * "success".  Any nonzero value is equivalent here, since callers only ever
  * test against TME_QFPROM_NO_ERR.
@@ -178,8 +132,8 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t addr;                             //<! SoC address of the row to write
-  uint32_t data[TME_QFPROM_FUSE_DATA_WORDS]; //<! Value to blow, low word first
+	uint32_t addr;                             /* ! SoC address of the row to write */
+	uint32_t data[TME_QFPROM_FUSE_DATA_WORDS]; /* ! Value to blow, low word first */
 } TMEFuse_t;
 
 /*
@@ -188,24 +142,24 @@ typedef PACKED_STRUCT
  * Layout (array first, count last) copied verbatim from TME FW's
  * TmeMessageTypes.h.  TME FW requires the whole struct: its handler rejects
  * anything shorter than sizeof(tmeFuseWriteMultipleReq_t), so all
- * TME_MAX_FUSE_WRITE_REQ slots go on the wire regardless of fuseArrayLen.
+ * TME_MAX_FUSE_WRITE_REQ slots go on the wire regardless of fuse_array_len.
  */
 typedef PACKED_STRUCT
 {
-  TMEFuse_t fuseArray[TME_MAX_FUSE_WRITE_REQ]; //<! Rows to write
-  uint32_t  fuseArrayLen;                      //<! Valid entries in fuseArray
+	TMEFuse_t fuse_array[TME_MAX_FUSE_WRITE_REQ]; /* ! Rows to write */
+	uint32_t  fuse_array_len;                      /* ! Valid entries in fuse_array */
 } tmeFuseWriteMultipleReq_t;
 
 /*
  * Response payload for TME_MSG_CBOR_TAG_FUSE_WRITE_MULTIPLE.
  *
- * TME FW sets .status from its handler's return code and .addrErr from the
+ * TME FW sets .status from its handler's return code and .addr_err from the
  * qfprom driver's per-address error output (tme_handle_fuse_write_multiple.cpp).
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status;  //<! TME handler status; TME_QFPROM_NO_ERR on success
-  uint32_t addrErr; //<! qfprom driver address/error detail
+	uint32_t status;  /* ! TME handler status; TME_QFPROM_NO_ERR on success */
+	uint32_t addr_err; /* ! qfprom driver address/error detail */
 } tmeFuseWriteMultipleRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -218,10 +172,10 @@ typedef PACKED_STRUCT
  */
 typedef enum
 {
-  QFPROM_BIST_CTRL = 1,
-  QFPROM_WRITE_DISABLE_STICKY_BIT0,
-  QFPROM_WRITE_DISABLE_STICKY_BIT1,
-  TME_WRITE_CONFIG_REGISTER_MAX = 0xFF
+	QFPROM_BIST_CTRL = 1,
+	QFPROM_WRITE_DISABLE_STICKY_BIT0,
+	QFPROM_WRITE_DISABLE_STICKY_BIT1,
+	TME_WRITE_CONFIG_REGISTER_MAX = 0xFF
 } tmeConfigRegisterId_e;
 
 /*
@@ -229,8 +183,8 @@ typedef enum
  */
 typedef PACKED_STRUCT
 {
-  uint8_t  id;    //<! tmeConfigRegisterId_e selecting the register
-  uint32_t value; //<! Value to write into the register
+	uint8_t  id;    /* ! tmeConfigRegisterId_e selecting the register */
+	uint32_t value; /* ! Value to write into the register */
 } tmeWriteConfigRegisterReq_t;
 
 /*
@@ -238,7 +192,7 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status; //<! TME handler status; 0 on success
+	uint32_t status; /* ! TME handler status; 0 on success */
 } tmeWriteConfigRegisterRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -250,7 +204,7 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status; //<! TME handler status; 0 on success
+	uint32_t status; /* ! TME handler status; 0 on success */
 } tmeSetXpuDbgarRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -262,16 +216,16 @@ typedef PACKED_STRUCT
  */
 typedef enum
 {
-  TMECOM_QTI_CA_ID     = 0x01,
-  TMECOM_OEM_CA_ID     = 0x02,
-  TMECOM_DELEGATE_K_ID = 0x04
+	TMECOM_QTI_CA_ID     = 0x01,
+	TMECOM_OEM_CA_ID     = 0x02,
+	TMECOM_DELEGATE_K_ID = 0x04
 } tmeSoftwareRootCaIds;
 
 /*
  * The wire size here is dictated by the TME firmware binary actually running
  * on target: a boot-time probe against real TME FW on this SoC observed a
  * 108-byte response (4 + 4 + 25*4), i.e. a 25-entry array.  Getting this
- * wrong doesn't corrupt anything - TransceiveMessage()'s length check rejects
+ * wrong doesn't corrupt anything - transceive_message()'s length check rejects
  * the mismatched response outright - but every call fails until this matches
  * what TME actually sends.
  */
@@ -282,7 +236,7 @@ typedef enum
  */
 typedef PACKED_STRUCT
 {
-  uint32_t signingAuthority; //<! tmeSoftwareRootCaIds selecting the CA
+	uint32_t signing_authority; /* ! tmeSoftwareRootCaIds selecting the CA */
 } tmeSignedSwIdsReq_t;
 
 /*
@@ -290,9 +244,9 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status;                                //<! TME handler status; 0 on success
-  uint32_t swIdCount;                             //<! Valid entries in swIds
-  uint32_t swIds[TME_SIGNED_IMAGE_SWIDS_MAX];      //<! Signed image IDs
+	uint32_t status;                                /* ! TME handler status; 0 on success */
+	uint32_t sw_id_count;                             /* ! Valid entries in sw_ids */
+	uint32_t sw_ids[TME_SIGNED_IMAGE_SWIDS_MAX];      /* ! Signed image IDs */
 } tmeSignedSwIdsRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -307,8 +261,8 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t swIds[TMECOM_PIL_IMAGES_MAX_SWIDS]; //<! Software IDs to query
-  uint32_t swIdCount;                          //<! Valid entries in swIds
+	uint32_t sw_ids[TMECOM_PIL_IMAGES_MAX_SWIDS]; /* ! Software IDs to query */
+	uint32_t sw_id_count;                          /* ! Valid entries in sw_ids */
 } tmeGetPilImageRegionsReq_t;
 
 /*
@@ -316,9 +270,9 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t swId;      //<! Id of the image this region belongs to
-  uint32_t startAddr; //<! Region start address (SoC view)
-  uint32_t endAddr;   //<! Region end address (SoC view)
+	uint32_t sw_id;      /* ! Id of the image this region belongs to */
+	uint32_t start_addr; /* ! Region start address (SoC view) */
+	uint32_t end_addr;   /* ! Region end address (SoC view) */
 } tmePilRegion_t;
 
 /*
@@ -326,9 +280,9 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t       status;                                    //<! TME handler status; 0 on success
-  tmePilRegion_t regionList[TMECOM_PIL_IMAGES_MAX_REGIONS];  //<! Regions found
-  uint32_t       regionListCount;                           //<! Valid entries in regionList
+	uint32_t       status;                                    /* ! TME handler status; 0 on success */
+	tmePilRegion_t region_list[TMECOM_PIL_IMAGES_MAX_REGIONS];  /* ! Regions found */
+	uint32_t       region_list_count;                           /* ! Valid entries in region_list */
 } tmeGetPilImageRegionsRsp_t;
 
 /*--------------------------------------------------------------------------*
@@ -345,8 +299,8 @@ typedef PACKED_STRUCT
  */
 typedef PACKED_STRUCT
 {
-  uint32_t status;  //<! TME handler status; 0 on success
-  uint32_t errAddr; //<! Failing fuse address; not meaningful when status is 0
+	uint32_t status;  /* ! TME handler status; 0 on success */
+	uint32_t err_addr; /* ! Failing fuse address; not meaningful when status is 0 */
 } tmeUpdateRollbackVersionRsp_t;
 
 #endif /* TME_INTERFACES_DEFS_H_INCLUDED */
