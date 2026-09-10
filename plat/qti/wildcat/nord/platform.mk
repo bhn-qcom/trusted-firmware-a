@@ -104,6 +104,8 @@ ENABLE_ASSERTIONS		:=	1
 
 # Enable backtrace dumps.
 ENABLE_BACKTRACE		:=	1
+PMIC_ARB_VERSION	:=	pmicarb7
+include drivers/qti/pmic/pmic.mk
 
 QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
@@ -124,6 +126,7 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(PLAT_QTI_ROOT)/common/src/qti_gic_v3.c		\
 				$(PLAT_QTI_ROOT)/common/src/qti_interrupt_svc.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_syscall.c		\
+				$(QTI_PLAT_PATH)/common/src/qti_secure_io.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_err_log.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_tlb.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
@@ -144,6 +147,7 @@ endif
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
+PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -181,7 +185,7 @@ QTI_NCC_CPU		:= 1
 #driver can expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
-CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/cortex_phoenix.S
+CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_phoenix.S
 
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
@@ -189,7 +193,6 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${CPU_SOURCES}					\
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
-
 LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
 # Override this on the command line to point to the bl31qtilib library
@@ -207,6 +210,9 @@ PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET} \
 QTI_USE_QTIMER		:=	1
 QTI_USE_NCC_QTIMER	:=	1
 $(eval $(call add_define,QTI_USE_NCC_QTIMER))
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
+
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
 # Select the NORD secure watchdog implementation.
 QTI_WDOG_VARIANT	?=	windowed
@@ -224,7 +230,7 @@ BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
 			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c \
 			drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
-			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
+				$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
 else
 # use library provided by BL31QTILIB_PATH
 LDFLAGS += -L $(dir $(BL31QTILIB_PATH))

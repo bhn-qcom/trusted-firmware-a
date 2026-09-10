@@ -54,6 +54,8 @@ static uintptr_t oem_svc_smc_handler(uint32_t smc_fid, u_register_t x1,
 		/* Buffer is located via TME, not the caller-supplied x1/x2 */
 		SMC_RET1(handle, qti_fuseprov_init());
 	default:
+	default:
+		/* Allow the call to be forwarded to QTEE if using qteed */
 		forward_to_spd = true;
 		break;
 	}

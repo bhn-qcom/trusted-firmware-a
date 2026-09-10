@@ -78,13 +78,6 @@ static int cluster_sysini_done[PLAT_CLUSTER_COUNT]
 /*
  * The macro ``DEFINE_BAKERY_LOCK`` allocates locks in section `bakery_lock`
  */
-#if !HW_ASSISTED_COHERENCY
-DEFINE_BAKERY_LOCK(cluster_sysini_lock[PLAT_CLUSTER_COUNT]);
-#else
-static spinlock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
-	__section(".tzfw_coherent_mem");
-#endif
-
 static boot_qsee_interface *sbl_qsee_interface;
 
 /*
@@ -371,6 +364,14 @@ extern int qti_fuseprov_init(void);
 
 void bl31_platform_setup(void)
 {
+#pragma weak plat_cpuss_config
+
+void plat_cpuss_config(void)
+{
+}
+
+void bl31_platform_setup(void)
+{
 	INFO("Starting %s - %s\n", qti_build_variant, bl31qtilib_build_variant);
 	INFO("QC Image Version %s\n", QC_IMAGE_VERSION_STRING_AUTO_UPDATED);
 	INFO("Image Variant %s\n", IMAGE_VARIANT_STRING_AUTO_UPDATED);
@@ -382,6 +383,9 @@ void bl31_platform_setup(void)
 	INFO("TFA\n");
 
 	bl31qtilib_bl31_platform_early_setup();
+
+	/* Configures platform CPUSS specific configurations */
+	plat_cpuss_config();
 
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();
