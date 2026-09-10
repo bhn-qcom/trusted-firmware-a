@@ -314,13 +314,14 @@ fuseprov_error_etype fuseprov_blow_fuses_sec_elf_v3(
 	}
 
 	/* Not an error: no sec partition, or an empty one, is valid */
-	for (i = 0; i < len && buf[i] == 0; i++);
+	for (i = 0; ((i < len) && (buf[i] == 0)); i++);
 
 	if (i == len) {
-		// NOTICE("Fuseprov: SEC.DAT buffer is empty, nothing to blow\n");
+		NOTICE("Fuseprov: SEC.DAT buffer is empty, nothing to blow\n");
 		return  FUSEPROV_SUCCESS ;
 	}
 
+	NOTICE("Fuseprov: Non-Zero Byte: %d.\n", i);
 	NOTICE("Fuseprov: Starting fuse provisioning\n");
 
 	/* Parse SEC.DAT header and get the flat fuse-entry array */
