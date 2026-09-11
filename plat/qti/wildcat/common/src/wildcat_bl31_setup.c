@@ -19,6 +19,7 @@
 #include <drivers/generic_delay_timer.h>
 #include <drivers/qti/chipinfo/chipinfo.h>
 #include <drivers/qti/qtimer/qtimer.h>
+#include <drivers/qti/tmecom/tmecom.h>
 #include <drivers/qti/watchdog/watchdog.h>
 #include <export/plat/qti/common/plat_params_exp.h>
 #include <lib/bakery_lock.h>
@@ -41,15 +42,32 @@
 #include <arch_helpers.h>
 #include <tfa_bl31_shared_imem.h>
 
+#ifdef QTI_USE_TMECOM
+/*
+ * TME message/interface API headers.  These live on include paths added only
+ * by drivers/qti/tme/tme.mk, so they must stay behind QTI_USE_TMECOM - other
+ * wildcat platforms (e.g. hamoa) do not include tme.mk and would fail to
+ * compile this file otherwise.
+ */
+#include <IxErrno.h>
+#include <TmeInterfaces.h>
+#include <TmeInterfacesDefs.h>
+#include <TmeMessage.h>
+#include <qcbor.h>
+#include <qcbor_spiffy_decode.h>
+
+#include <drivers/qti/tme/tme_boot_test.h>
+#endif
+
 /* Ringbuf definition */
 /* For platform with TZ imem */
 #ifdef TFA_IMEM_BASE
-console_ringbuf_t *g_qti_bl31_ringbuf_ptr =
-					(console_ringbuf_t *)TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE;
+struct console_ringbuf *g_qti_bl31_ringbuf_ptr =
+					(struct console_ringbuf *)TFA_BL31_RING_BUFFER_IN_TZ_IMEM_BASE;
 #else
 /* For platform without TZ imem, place in DDRM */
-console_ringbuf_t g_qti_bl31_ringbuf;
-console_ringbuf_t *g_qti_bl31_ringbuf_ptr = &g_qti_bl31_ringbuf;
+struct console_ringbuf g_qti_bl31_ringbuf;
+struct console_ringbuf *g_qti_bl31_ringbuf_ptr = &g_qti_bl31_ringbuf;
 #endif /* TFA_IMEM_BASE */
 
 /* Sysini related flags */
@@ -57,16 +75,17 @@ static int cpuss_sysini_done __section(".tzfw_coherent_mem");
 static int cluster_sysini_done[PLAT_CLUSTER_COUNT]
 	__section(".tzfw_coherent_mem");
 
+#if HW_ASSISTED_COHERENCY
+static spinlock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
+	__section(".tzfw_coherent_mem");
+#else
+static bakery_lock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
+	__section(".bakery_lock");
+#endif
+
 /*
  * The macro ``DEFINE_BAKERY_LOCK`` allocates locks in section `bakery_lock`
  */
-#if !HW_ASSISTED_COHERENCY
-DEFINE_BAKERY_LOCK(cluster_sysini_lock[PLAT_CLUSTER_COUNT]);
-#else
-static spinlock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
-	__section(".tzfw_coherent_mem");
-#endif
-
 static boot_qsee_interface *sbl_qsee_interface;
 
 /*
@@ -349,9 +368,16 @@ extern char OEM_IMAGE_VERSION_STRING_AUTO_UPDATED[];
 extern char OEM_IMAGE_UUID_STRING_AUTO_UPDATED[];
 extern char OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED[];
 
+extern int qti_fuseprov_init(void);
+
+#pragma weak plat_cpuss_config
+
+void plat_cpuss_config(void)
+{
+}
+
 void bl31_platform_setup(void)
 {
-	int ret;
 	INFO("Starting %s - %s\n", qti_build_variant, bl31qtilib_build_variant);
 	INFO("QC Image Version %s\n", QC_IMAGE_VERSION_STRING_AUTO_UPDATED);
 	INFO("Image Variant %s\n", IMAGE_VARIANT_STRING_AUTO_UPDATED);
@@ -360,7 +386,12 @@ void bl31_platform_setup(void)
 	INFO("OEM Host timestamp %s\n", OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED);
 	bl31qtilib_set_boot_cpu_num(plat_my_core_pos());
 
+	INFO("TFA\n");
+
 	bl31qtilib_bl31_platform_early_setup();
+
+	/* Configures platform CPUSS specific configurations */
+	plat_cpuss_config();
 
 	/* Initialize the GIC driver, CPU and distributor interfaces */
 	plat_qti_gic_driver_init();
@@ -376,16 +407,72 @@ void bl31_platform_setup(void)
 	 */
 	qti_interrupt_svc_init(bl32_image_ep_info.pc != 0UL);
 
-	ret = qti_qtimer_init();
-	if (ret != 0) {
-		ERROR("QTimer init failed: %d\n", ret);
-	}
+	qti_qtimer_init();
+
+	/*
+	 * Register the architected-counter delay timer ops.  qti_qtimer_init()
+	 * deliberately does not do this (see drivers/qti/qtimer/qtimer.c) - the
+	 * platform owns the call - and it must happen after the qtimer AC
+	 * registers are programmed above.  Until this runs, timer_ops is NULL
+	 * and every udelay()/mdelay()/timeout_init_us() in BL31 asserts.
+	 */
+	generic_delay_timer_init();
 
 	if (qti_watchdog_init() != 0) {
 		ERROR("Watchdog initialization error\n");
 	}
 
 	bl31qtilib_bl31_platform_setup();
+
+	INFO("TFA Start\n");
+
+	/*
+	 * Provision fuses from the sec.elf image TME authenticated at boot.
+	 * Must run after bl31qtilib_bl31_platform_setup(): fuseprov talks to
+	 * TME over the tme-qmp TMECOM channel, which is not connected yet at
+	 * this point in bring-up - calling earlier hits tmecomInterfaceInit()'s
+	 * 100 ms connect timeout and every TME transaction fails with
+	 * FUSEPROV_ERR_TRANSPORT.
+	 */
+	qti_fuseprov_init();
+
+#ifdef QTI_USE_TMECOM
+	// INFO("TFA tmecom init\n");
+	// if (tmecom_init("tme-qmp") != 0) {
+	// 	ERROR("tmecom initialization error\n");
+	// }
+#ifdef QTI_TMECOM_TEST
+	// else {
+		// uint8_t req_buf[] = {0x00, 0x00, 0x00, 0x00};
+		// uint8_t rsp_buf[64];
+		// size_t rsp_size = sizeof(rsp_buf);
+		// int rc;
+
+		// INFO("tmecom test started\n");
+
+		// rc = tmecom_send_recv(req_buf, sizeof(req_buf),
+		// 		      rsp_buf, &rsp_size);
+
+		// INFO("tmecom test done rc:%d, rsp_size:%zu\n",
+		// 		rc, rsp_size);
+
+		/*
+		 * tmecom_boot_sha_test() and tmecom_boot_loopback_test() are both
+		 * parked for now - TME returns E_NOT_ALLOWED for the SHA digest
+		 * request (likely a data-buffer access-policy question on the TME
+		 * FW side), and does not reliably service the loopback tag at all
+		 * (see the comment above tmecom_boot_loopback_test() for the raw
+		 * evidence). Only the fuse paths are probed, which have been
+		 * well-behaved.
+		 */
+		tmecom_boot_fuse_read_test();
+		tmecom_boot_fuse_write_multiple_test();
+		tmecom_boot_write_config_register_test();
+	// }
+#endif
+#endif
+	INFO("TFA done\n");
+
 }
 
 /*******************************************************************************

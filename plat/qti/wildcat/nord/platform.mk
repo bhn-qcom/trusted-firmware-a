@@ -105,6 +105,12 @@ ENABLE_ASSERTIONS		:=	1
 # Enable backtrace dumps.
 ENABLE_BACKTRACE		:=	1
 
+# Enable FuseProv read-back diagnostics.
+$(eval $(call add_define, QTI_FUSEPROV_TEST))
+
+PMIC_ARB_VERSION	:=	pmicarb7
+include drivers/qti/pmic/pmic.mk
+
 QTI_EXTERNAL_INCLUDES	:=	-I${QTI_PLAT_PATH}/${CHIPSET}/inc			\
 				-I${QTI_PLAT_PATH}/common/inc				\
 				-I${QTI_PLAT_PATH}/common/inc/$(ARCH)			\
@@ -130,7 +136,6 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 				$(QTI_PLAT_PATH)/common/src/qti_topology.c		\
 				$(QTI_PLAT_PATH)/common/src/qti_pm.c			\
 				$(QTI_PLAT_PATH)/common/src/qti_rng.c			\
-				$(PLAT_QTI_ROOT)/common/src/spmi_arb.c			\
 				$(QTI_PLAT_PATH)/bl31qtilib/src/bl31qtilib_cb_interface.c	\
 				$(QTI_PLAT_PATH)/common/src/qti_plat_helpers.c \
 				drivers/qti/crypto/rng.c
@@ -138,12 +143,17 @@ QTI_BL31_SOURCES	:=	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
 
 # Ensure Widevine is not being used
 ifeq ($(CROS_WIDEVINE_SMC), 0)
-QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c
+QTI_BL31_SOURCES		+=	$(QTI_PLAT_PATH)/common/src/qti_oem_svc.c	\
+					$(QTI_PLAT_PATH)/common/src/qti_fuseprov_platform.c
 endif
 
 PLAT_INCLUDES		:=	-Iinclude/plat/common/					\
 
 PLAT_INCLUDES		+=	${QTI_EXTERNAL_INCLUDES}
+PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
+PLAT_INCLUDES		+=	-Iinclude/drivers/qti/pmic				\
+				-Iinclude/drivers/qti/pmic/${PMIC_ARB_VERSION}	\
+				-Iinclude/drivers/qti/pmic/${CHIPSET}
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -181,7 +191,7 @@ QTI_NCC_CPU		:= 1
 #driver can expose older soc_id format
 $(eval $(call add_define, QTI_NO_SMCC_ARCH_SOC_ID))
 
-CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/cortex_phoenix.S
+CPU_SOURCES		:=	$(QTI_PLAT_PATH)/common/src/aarch64/qcom_phoenix.S
 
 BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${GIC_SOURCES}					\
@@ -189,16 +199,24 @@ BL31_SOURCES		+=	${QTI_BL31_SOURCES}				\
 				${CPU_SOURCES}					\
 
 BL31_SOURCES		+=	${QGIC_DRV_PATH}/qgic_intr_el3.c
+LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
 
-PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET}
+# Override this on the command line to point to the bl31qtilib library
+BL31QTILIB_PATH ?=
+ifeq ($(BL31QTILIB_PATH),)
+# if No lib then use stub implementation for bl31qtilib interface
+$(warning BL31QTILIB_PATH is not provided while building, using stub \
+		implementation. THIS FIRMWARE WILL NOT BOOT!)
+BL31_SOURCES	+=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_interface_stub.c \
+			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_version_strings_stub.c
+
+PLAT_INCLUDES	+=	-Iinclude/drivers/qti/qtimer/${CHIPSET} \
+			-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
 QTI_USE_QTIMER		:=	1
 QTI_USE_NCC_QTIMER	:=	1
 $(eval $(call add_define,QTI_USE_NCC_QTIMER))
-
-BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
-			drivers/qti/qtimer/qtimer_ncc.c \
-			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c
+BL31_SOURCES		+=	$(QTI_PLAT_PATH)/${CHIPSET}/src/plat_cpuss_config.c
 
 PLAT_INCLUDES	+=	-Iinclude/drivers/qti/watchdog/${CHIPSET}
 
@@ -213,21 +231,12 @@ else
 $(error QTI_WDOG_VARIANT must be windowed or apsec, got $(QTI_WDOG_VARIANT))
 endif
 
-BL31_SOURCES	+=	drivers/qti/watchdog/watchdog.c \
+BL31_SOURCES	+=	drivers/qti/qtimer/qtimer.c \
+			drivers/qti/qtimer/qtimer_ncc.c \
+			$(QTI_PLAT_PATH)/common/src/qti_qtimer_platform.c \
+			drivers/qti/watchdog/watchdog.c \
 			$(QTI_WDOG_VER_SRC) \
-			$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
-
-LIB_QTI_PATH	:=	${QTI_PLAT_PATH}/bl31qtilib/lib/${CHIPSET}
-
-# Override this on the command line to point to the bl31qtilib library
-BL31QTILIB_PATH ?=
-ifeq ($(BL31QTILIB_PATH),)
-# if No lib then use stub implementation for bl31qtilib interface
-$(warning BL31QTILIB_PATH is not provided while building, using stub \
-		implementation. THIS FIRMWARE WILL NOT BOOT!)
-BL31_SOURCES	+=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_interface_stub.c \
-			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_version_strings_stub.c
-
+				$(QTI_PLAT_PATH)/common/src/qti_watchdog_platform.c
 else
 # use library provided by BL31QTILIB_PATH
 LDFLAGS += -L $(dir $(BL31QTILIB_PATH))
@@ -249,5 +258,22 @@ endif
 # BL31 QTI calls to the selected SPD.
 BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
 			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
+
+# QCOM MBOX
+QCOM_MBOX	:=	1
+QCOM_MBOX_QMP	:=	1
+
+include drivers/qti/mbox/mbox.mk
+PLAT_INCLUDES	+=	-Idrivers/qti/mbox/
+BL31_SOURCES	+=	${QTI_PLAT_PATH}/$(CHIPSET)/src/qcom_mbox_plat.c
+
+# TMECOM
+QTI_TMECOM	:=	1
+$(eval $(call add_define,QTI_USE_TMECOM))
+$(eval $(call add_define,QTI_TMECOM_TEST))
+include drivers/qti/tme/tme.mk
+
+# Fuseprov driver: parses SEC.DAT and blows fuses via the TME transport.
+include drivers/qti/fuseprov/fuseprov.mk
 
 include $(QTI_PLAT_PATH)/common/common.mk

@@ -109,7 +109,8 @@ QTI_EXTERNAL_INCLUDES :=					\
 	-I${QTI_PLAT_PATH}/common/inc				\
 	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)			\
 	-I${QTI_PLAT_PATH}/bl31qtilib/inc			\
-	-I${QTI_COMMON_PATH}/inc
+	-I${QTI_COMMON_PATH}/inc				\
+	-I${QTI_COMMON_PATH}/inc/$(ARCH)
 
 QTI_BL31_SOURCES :=						\
 	$(QTI_PLAT_PATH)/common/src/$(ARCH)/qti_helpers.S	\
@@ -143,6 +144,7 @@ endif
 PLAT_INCLUDES := -Iinclude/plat/common/
 
 PLAT_INCLUDES += ${QTI_EXTERNAL_INCLUDES}
+PLAT_INCLUDES		+=	-I${QTI_PLAT_PATH}/common/inc/$(ARCH)
 
 include lib/xlat_tables_v2/xlat_tables.mk
 include drivers/qti/smem/smem.mk
@@ -228,4 +230,8 @@ LDLIBS += -l$(patsubst lib%.a,%,$(notdir $(BL31QTILIB_PATH)))
 
 endif
 
+# Always use the SPD-agnostic adapter for NORD. These stubs do not forward
+# BL31 QTI calls to the selected SPD.
+BL31_SOURCES +=	${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_stub.c \
+			${QTI_PLAT_PATH}/bl31qtilib/src/bl31qtilib_spd_agnostic_panic_stub.S
 include $(QTI_PLAT_PATH)/common/common.mk
