@@ -144,17 +144,14 @@
 #define QTI_AOP_CMD_DB_BASE 0x87148000
 #define QTI_AOP_CMD_DB_SIZE 0x00020000
 
+/* PS_HOLD register used to assert the configured PMIC reset. */
+#define QTI_PS_HOLD_REG 0x0C264000
+
 /*----------------------------------------------------------------------------*/
 /* SMEM base address                                                          */
 /*----------------------------------------------------------------------------*/
 #define QTI_SMEM_BASE ULL(0x89B00000)
 #define QTI_SMEM_SIZE ULL(0x00200000)
-
-/*----------------------------------------------------------------------------*/
-/* LC PON register offsets */
-/*----------------------------------------------------------------------------*/
-#define PON_PS_HOLD_RESET_CTL 0x852
-#define PON_PS_HOLD_RESET_CTL2 0x853
 
 /*
  * The Qualcomm QGIC2 implementation seems to have PIDR0-4 and PIDR4-7

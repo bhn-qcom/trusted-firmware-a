@@ -75,6 +75,14 @@ static int cpuss_sysini_done __section(".tzfw_coherent_mem");
 static int cluster_sysini_done[PLAT_CLUSTER_COUNT]
 	__section(".tzfw_coherent_mem");
 
+#if HW_ASSISTED_COHERENCY
+static spinlock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
+	__section(".tzfw_coherent_mem");
+#else
+static bakery_lock_t cluster_sysini_lock[PLAT_CLUSTER_COUNT]
+	__section(".bakery_lock");
+#endif
+
 /*
  * The macro ``DEFINE_BAKERY_LOCK`` allocates locks in section `bakery_lock`
  */
@@ -362,8 +370,6 @@ extern char OEM_HOST_TIMESTAMP_STRING_AUTO_UPDATED[];
 
 extern int qti_fuseprov_init(void);
 
-void bl31_platform_setup(void)
-{
 #pragma weak plat_cpuss_config
 
 void plat_cpuss_config(void)

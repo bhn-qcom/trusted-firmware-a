@@ -6,13 +6,28 @@
 
 #include <arch_helpers.h>
 #include <common/debug.h>
+#include <stdbool.h>
+#include <lib/mmio.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 #include <qti_plat.h>
 #include <drivers/qti/fuseprov/fuseprov.h>
 #include <drivers/qti/fuseprov/fuseprov_mrc_cfg.h>
+#include <drivers/qti/pmic/pm_pon.h>
 #include <drivers/qti/fuseprov/fuseprov_port_tme.h>
 
-#include <bl31qtilib_interface.h>
+static __dead2 __unused void qti_fuseprov_trigger_reset(bool warm_reset)
+{
+	pm_app_ps_hold_cfg(warm_reset ? RESET_TYPE_WARM_RESET :
+				   RESET_TYPE_HARD_RESET);
+
+	/* Deasserting PS_HOLD starts the reset selected in the PMIC. */
+	NOTICE("Fuseprov-Reset: Writing the Register for PS Hold to Low\n");
+	mmio_write_32(QTI_PS_HOLD_REG, 0U);
+	NOTICE("Fuseprov-Reset: Written the Register for PS Hold to Low\n");
+
+	/* The reset is asynchronous; do not continue execution if delayed. */
+	while (true) wfi();
+}
 
 #if defined(QTI_FUSEPROV_TEST)
 /*
@@ -85,14 +100,11 @@ int qti_fuseprov_blow_fuses_and_reset(const uint8_t *secdat_buffer,
 		return ret;
 	}
 
-	NOTICE("Fuseprov: Fuse provisioning complete, triggering system reset\n");
+	NOTICE("Fuseprov: Fuse provisioning complete, reset deferred\n");
 
-	bl31qtilib_psci_system_reset();
-
-	/* Stay in WFI until the system resets */
-	while (1) {
-		wfi();
-	}
+	/* TODO: Re-enable when the FuseProv reset dependency is available. */
+	/* qti_fuseprov_trigger_reset(false); */
+	return FUSEPROV_SUCCESS;
 }
 
 /* Ask TME where it authenticated sec.elf during boot, then parse and blow
@@ -104,9 +116,10 @@ int qti_fuseprov_blow_fuses_and_reset(const uint8_t *secdat_buffer,
  * framework -- TF-A has none -- so it is exposed here for a caller to invoke
  * once one is chosen.
  *
- * @return: 0 if provisioning ran (successfully, with nothing to do, or
- *          already locked); -1 if the sec.elf region could not be located
- *          or mapped; the fuseprov_error_etype value on a fuse-blow failure
+ * @return: 0 if provisioning found nothing to do or the SEC.DAT was already
+ *          locked; -1 if the sec.elf region could not be located or mapped;
+ *          the fuseprov_error_etype value on a fuse-blow failure. Successful
+ *          fuse programming does not return because it triggers a reset.
  */
 int qti_fuseprov_init(void)
 {
@@ -142,7 +155,6 @@ int qti_fuseprov_init(void)
 
 	ret = fuseprov_blow_fuses_sec_elf_v3(transport, (uint8_t *)secelf_pa,
 					     secelf_len);
-
 #if defined(QTI_FUSEPROV_TEST)
 	qti_fuseprov_read_test(transport);
 #endif
@@ -166,8 +178,14 @@ int qti_fuseprov_init(void)
 	if (qti_mmap_remove_dynamic_region(secelf_pa, secelf_len) != 0)
 		ERROR("Fuseprov: failed to unmap sec.elf buffer\n");
 
-	if (ret == FUSEPROV_SUCCESS || ret == FUSEPROV_SECDAT_LOCK_BLOWN)
-		return 0;
+	if (ret == FUSEPROV_SUCCESS) {
+		/* TODO: Re-enable when the FuseProv reset dependency is available. */
+		/* qti_fuseprov_trigger_reset(false); */
+		return FUSEPROV_SUCCESS;
+	}
+
+	if (ret == FUSEPROV_SECDAT_LOCK_BLOWN)
+		return FUSEPROV_SUCCESS;
 
 	return (int)ret;
 }
